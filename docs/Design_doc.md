@@ -4,10 +4,10 @@
 
 Link to Github repo : https://github.com/KathpaliaChirag/Parallax---A-Parallel-VHDL-Simulator
 ## The problem in short is
-Traditional VHDL simulators are sequential .... they process one event at a time, in time order, on a single core. Modern machines have 8, 16, 32 cores sitting completely idle. Parallax is a try to fix this.
+Traditional VHDL simulators are sequential...they process one event at a time, in time order, on a single core. Modern machines have 8, 16, 32 cores sitting completely idle. Parallax is a try to fix this.
 
 ## But why is this problem hard?
-Now we genrally think .... just throw threads at it. Run events in parallel...maybe use OMP or something and its Done...
+Now we genrally think...just throw threads at it. Run events in parallel...maybe use OMP or something and its Done...
 
 Except no. Events have dependencies. If signal A feeds into process B which feeds into signal C, we cannot simply run those in parallel as in say B needs A to finish first. And then there is the concept of delta cycles (I do not understand it completely yet) however VHDL's way of handling zero-time cascading updates makes the ordering problem even more subtle...
 
@@ -34,7 +34,7 @@ Now after spending a long day on reading about it what I understand is full VHDL
 - `function` and `procedure`
 - `generic` maps
 
-This is not me being lazy .... this subset handles logic gates, flip flops, FSMs, and basic pipelines which is exactly what the benchmarks need or atleast thats what i understand...although if i am allowed to use a parser of vhdl that would help in cutting off some time and add more things....but if i have to write a parser of my own....I mean naaahh I can'c commit that much.... Everything else may get added incrementally once the core works.
+This is not me being lazy...this subset handles logic gates, flip flops, FSMs, and basic pipelines which is exactly what the benchmarks need or atleast thats what i understand...although if i am allowed to use a parser of vhdl that would help in cutting off some time and add more things...but if i have to write a parser of my own...I mean naaahh I can'c commit that much... Everything else may get added incrementally once the core works.
 
 ---
 
@@ -44,7 +44,7 @@ here i took help of AI as I do not completely understand this myself but aftear 
 ```
 Parallax/
 ├── src/
-│   ├── parser/          # Flex/Bison .... takes VHDL in, spits AST out
+│   ├── parser/          # Flex/Bison...takes VHDL in, spits AST out
 │   │   ├── lexer.l          
 │   │   ├── parser.y         
 │   │   ├── ast.h            
@@ -57,7 +57,7 @@ Parallax/
 │   │   ├── delta.h/c        # delta cycle logic
 │   │   └── scheduler.h/c    # ties core together
 │   ├── sim/             # two simulators, same core
-│   │   ├── sequential.h/c   # baseline .... correct but slow
+│   │   ├── sequential.h/c   # baseline...correct but slow
 │   │   └── parallel.h/c     # the actual contribution
 │   ├── analysis/        # dependency graph builder
 │   │   ├── dependency.h/c   
@@ -66,7 +66,7 @@ Parallax/
 │   │   ├── barrier.h/c      
 │   │   └── lockfree.h/c     
 │   └── output/          
-│       ├── vcd.h/c          # waveform output .... viewable in GTKWave
+│       ├── vcd.h/c          # waveform output...viewable in GTKWave
 │       └── trace.h/c        # trace hashing for correctness checking
 ├── tests/
 │   ├── unit/            # test each module independently
@@ -80,13 +80,13 @@ Parallax/
 └── main.c
 ```
 
-The idea of design decision here is that `core/` is shared between sequential and parallel... Both simulators use the same event queue, same signal representation, same delta cycle logic. The only difference is how processes get scheduled. This means if sequential is correct, parallel just needs to prove it produces the same output.... I hope that should be enough
+The idea of design decision here is that `core/` is shared between sequential and parallel... Both simulators use the same event queue, same signal representation, same delta cycle logic. The only difference is how processes get scheduled. This means if sequential is correct, parallel just needs to prove it produces the same output... I hope that should be enough
 
 ---
 
-## How we find parallelism .... Dependency Analysis
+## How we find parallelism...Dependency Analysis
 
-The idea is going to be very simple... Two processes are independent if they do not share signals .... one does not read what the other writes. We build a static dependency graph from the AST:
+The idea is going to be very simple... Two processes are independent if they do not share signals...one does not read what the other writes. We build a static dependency graph from the AST:
 
 - **Nodes** = processes
 - **Edges** = shared signals (read/write conflict)
@@ -97,7 +97,7 @@ Delta cycle boundaries are natural synchronization points... No process crosses 
 
 ---
 
-## Parallelization strategy .... Time-slice parallelism
+## Parallelization strategy...Time-slice parallelism
 
 For this too I took help of internet and AI tools... so what i understand is at each simulation timestamp, we collect all events due at that time, build the dependency graph for that slice, and run independent processes in parallel using OpenMP. Dependent processes are serialized.
 
@@ -106,7 +106,7 @@ while queue not empty:
     collect all events at current_time
     build dependency graph for this slice
     assign independent processes to threads (OpenMP)
-    barrier .... wait for all threads to finish
+    barrier...wait for all threads to finish
     resolve delta cycles
     advance simulation time
 ```
@@ -121,7 +121,7 @@ Three things guarantee correctness:
 
 **1. Causality** - the dependency graph ensures no process runs before its inputs are ready. If A → B, A always finishes before B starts.
 
-**2. Delta cycle correctness** .... barrier after every delta ensures all processes in delta N complete before any process in delta N+1 begins. VHDL semantics preserved.
+**2. Delta cycle correctness**...barrier after every delta ensures all processes in delta N complete before any process in delta N+1 begins. VHDL semantics preserved.
 
 **3. Determinism** - signal updates are atomic (no partial writes visible to other threads). We hash the waveform trace of both sequential and parallel runs. Identical hash means identical simulation. Non-identical hash means a bug.
 
@@ -192,7 +192,7 @@ design doc was written on 26-27 feb. parser was not started. sequential simulato
 ... I do agree and understand my mistake of having
 
 ---
-Below is a summary plan please read full day wise goal/plan on github :
+Below is a summary plan please read full day wise goal/plan on github : https://github.com/KathpaliaChirag/Parallax---A-Parallel-VHDL-Simulator/blob/main/README.md
 
 **phase 2 — sequential simulator (days 21-40)**
 
