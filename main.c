@@ -10,11 +10,13 @@
 //4. stop when queue is empty
 
 #include <stdio.h>
-#include "event.h"
-#include "event_queue.h"
+#include "./src/core/event.h"
+#include "./src/core/event_queue.h"
 // <event.h> → look in system/library folders
 // "event.h" → look in your own project folder
-#include "event_queue.c"
+#include "./src/core/event_queue.c"
+#include "./src/core/signal.h"
+#include "./src/core/signal.c"
 
 int main()
 {
@@ -26,6 +28,7 @@ int main()
     //well what if size becomes a problem? maybe i should consider dynamic array??
     // okay so update after making event_queue.c... we have some function to make a queue, add elements into it and extract min
     //i feel i should add time stramp of comments too... may get confusing later on
+    //----------- Test for event add/remove manual-------------
     EventQueue* temp = init_queue();
     Event e;
     e.time= 1;
@@ -40,8 +43,19 @@ int main()
     insert_ele(temp, f);
     insert_ele(temp, g);
     Event test = extract_min(temp);
-    printf("%f", test.time);
+    printf("%f\n", test.time);
     test = extract_min(temp);
-    printf("%f", test.time);
+    printf("%f\n", test.time);
+    //------------------------------------------------
+
+    //CHIRAG 28-02-26 (17:07)
+    //since i already added the signals here is a sorta test we will play on signals and see if all works well for now
+    //---------Test for signal add remove manual ----------
+    Signal *temp2 = init_signal("morphy");
+    update_signal(temp2, 10,2);
+    int t2= get_signal_value(temp2);
+    double t3=get_signal_last_change(temp2);
+    printf("%d \n%f\n", t2, t3);
+    //-----------------------------------------------------
     return 0;
 }

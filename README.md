@@ -9,9 +9,9 @@ plan in details
 ### day 21 — signal representation
 what even is a signal in VHDL? its basically a wire that holds a value and has a history. need to represent that in C.
 
-- figure out what fields a signal needs — name, type, current value, time of last change
-- write signal.h with the struct
-- write signal.c with a basic update function
+- figure out what fields a signal needs — name, type, current value, time of last change (done)
+- write signal.h with the struct (donee)
+- write signal.c with a basic update function (done)
 - done when: can create a signal, set its value, read it back
 
 ### day 22 — process representation

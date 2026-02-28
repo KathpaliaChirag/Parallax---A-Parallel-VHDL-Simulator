@@ -1,4 +1,4 @@
-//CHIRAG : 28-02-26
+//CHIRAG : 28-02-26 (16:54)
 //Okay so this file will have the implementation of what fuctions we will be applyong on a signal...for now i can think of 3
 // namely initilise it, update it and maybe read it....this should cover all
 // idea was to sorta have name passed as a parameter to the function and it create dunction of that name
@@ -26,12 +26,12 @@ void update_signal(Signal* s,int val, double time)
 s->value = val;
 s->last_change_on = time;
 }
-int get_value(Signal *s)
+int get_signal_value(Signal *s)
 {
 return s->value;
 }
 //added later same day thought that migh need to see when was a function last written so added it 
-double get_last_change(Signal *s)
+double get_signal_last_change(Signal *s)
 {
 return s->last_change_on;
 }
