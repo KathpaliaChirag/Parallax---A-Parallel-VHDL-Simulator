@@ -12,9 +12,40 @@ what even is a signal in VHDL? its basically a wire that holds a value and has a
 - figure out what fields a signal needs — name, type, current value, time of last change (done)
 - write signal.h with the struct (donee)
 - write signal.c with a basic update function (done)
-- done when: can create a signal, set its value, read it back
+- done when: can create a signal, set its value, read it back (done)
 
-### day 22 — process representation
+
+//---------------------------------------------------------------------
+EOD Summary (CHIRAG : Added on 28-02-2026 at 18:36) : so todays work was really simple and small just had to make signal... now the next stage is for me to make a process...so now a process is simply put a trigger as in i studied in system level design like when ever there is a change in input of var we trigger a function.... so taking similar approach i am thinking to design a process having 3 things senstivity list, what to trigger and process id.... now problem is that would require me to have a dynamic array...later realised that i didnt put the true logic to make the event_queue dynamic also....
+now i can thing of a common utils file having a dynamic array ... which i can use everywhere something like
+typedef struct{
+    void **data //// this data will be an array of void pointers thus can be truely dynamic and i can always do a realloc
+    int size, cap;
+} 
+problem is this approach compromise the security as in compiler may not catch if someday i put an event in a signal array
+
+so now either i can declare seperate array on each file (annoying to do)
+OR as a suggestion to the problem by AI was to use macros (Good idea actually) this might give security
+
+ macros (going with this)
+
+#define DYNARRAY_TYPE(T) \
+typedef struct { \
+    T *data; \
+    int size; \
+    int capacity; \
+} DynArray_##T;
+
+generates a separate type-safe struct for each type at compile time. ## pastes tokens together so DynArray_##Signal becomes DynArray_Signal. \ continues the macro to next line.
+
+usage:
+DYNARRAY_TYPE(Event)   // generates DynArray_Event
+DYNARRAY_TYPE(Signal)  // generates DynArray_Signal
+
+//CHIRAG : 07-03-2026 : was ill last 4-5 days will pull all work today and do it all....
+//----------------------------------------------------------------------------
+
+ ### day 22 — process representation
 a process in VHDL wakes up when signals it cares about change. need to represent that.
 
 - write process.h — process struct with sensitivity list and a function pointer
