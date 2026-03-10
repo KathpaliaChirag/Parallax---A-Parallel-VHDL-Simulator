@@ -17,7 +17,8 @@
 #include "./src/core/event_queue.c"
 #include "./src/core/signal.h"
 #include "./src/core/signal.c"
-
+#include "./src/core/process.c"
+#include "./src/core/process.h"
 int main()
 {
 
@@ -29,7 +30,7 @@ int main()
     // okay so update after making event_queue.c... we have some function to make a queue, add elements into it and extract min
     //i feel i should add time stramp of comments too... may get confusing later on
     //----------- Test for event add/remove manual-------------
-    EventQueue* temp = init_queue();
+    EventQueue temp = init_queue();
     Event e;
     e.time= 1;
     e.type= 1;
@@ -39,12 +40,12 @@ int main()
     Event g;
     g.time= 2;
     g.type= 2;
-    insert_ele(temp, e);
-    insert_ele(temp, f);
-    insert_ele(temp, g);
-    Event test = extract_min(temp);
+    insert_ele(&temp, e);
+    insert_ele(&temp, f);
+    insert_ele(&temp, g);
+    Event test = extract_min(&temp);
     printf("%f\n", test.time);
-    test = extract_min(temp);
+    test = extract_min(&temp);
     printf("%f\n", test.time);
     //------------------------------------------------
 
@@ -57,5 +58,12 @@ int main()
     double t3=get_signal_last_change(temp2);
     printf("%d \n%f\n", t2, t3);
     //-----------------------------------------------------
+
+    //-----------------------------------------------------
+    //CHIRAG 10-03-25 (13:05) :
+    //okay so since i added process implementation now its time to write up a static test and try to check it 
+    Process p= process_init("murphy", NULL);
+    process_add_signal(&p, *temp2);
+    process_print_signals(&p);
     return 0;
 }

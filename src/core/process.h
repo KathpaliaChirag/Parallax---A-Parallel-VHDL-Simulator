@@ -14,7 +14,7 @@
 #define PROCESS_H
 #include "utils.h"
 #include "signal.h"
-DYNARRAY_TYPE(Signal)
+// DYNARRAY_TYPE(Signal)
 // typedef DynArray_Signal signals
 typedef struct {
     int id;

@@ -12,7 +12,7 @@
 static int id_counter =0;
 Process process_init(char *name, void (*run)(void))
 {
-    Process p;
+Process p;
 p.id = id_counter;
 id_counter++;
 p.name = name;
