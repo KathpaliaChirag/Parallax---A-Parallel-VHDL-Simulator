@@ -21,6 +21,8 @@
 #include "./src/core/process.h"
 #include "./src/core/scheduler.h"
 #include "./src/core/scheduler.c"
+#include "./src/core/delta.h"
+#include "./src/core/delta.c"
 void my_run(void)
 {
     printf("\nHello world by CK\n");
@@ -35,6 +37,16 @@ int main()
     //well what if size becomes a problem? maybe i should consider dynamic array??
     // okay so update after making event_queue.c... we have some function to make a queue, add elements into it and extract min
     //i feel i should add time stramp of comments too... may get confusing later on
+    //-----------------------------------------------------------
+    //CHIRAG 12-03-26- 2:58 :: testing time and delta here 
+    init_run();
+    print_state();
+    advance_delta();
+    print_state();
+    advance_time();
+    print_state();
+    //-------------------------------------------------------------
+    
     //----------- Test for event add/remove manual-------------
     EventQueue temp = init_queue();
     Event e;
