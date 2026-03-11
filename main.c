@@ -38,21 +38,30 @@ int main()
     //----------- Test for event add/remove manual-------------
     EventQueue temp = init_queue();
     Event e;
-    e.time= 1;
+    // e.time= 1;
     e.type= 1;
     Event f;
-    f.time= 3;
+    // f.time= 3;
     f.type= 3;
     Event g;
-    g.time= 2;
+    // g.time= 2;
     g.type= 2;
+    // CHIRAG 12-03-26 : 00:33 :: okay so have added the time and deltas and testing how ot works now 
+    e.time = 1; e.delta = 0;
+    g.time = 1; g.delta = 1;
+    f.time = 1; f.delta = 2;
+
     insert_ele(&temp, e);
     insert_ele(&temp, f);
     insert_ele(&temp, g);
     Event test = extract_min(&temp);
-    printf("%f\n", test.time);
+    printf("time : %f delta : %d\n", test.time, test.delta);
+    
     test = extract_min(&temp);
-    printf("%f\n", test.time);
+    printf("time : %f delta : %d\n", test.time, test.delta);
+    
+    test = extract_min(&temp);
+    printf("time : %f delta : %d\n", test.time, test.delta);
     //------------------------------------------------
 
     //CHIRAG 28-02-26 (17:07)

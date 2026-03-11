@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Parallax — Architecture Map</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;500;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0f;
+    color: #e0e0e0;
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 40px 48px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ff6b35;
+    margin-bottom: 8px;
+  }
+
+  header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #555;
+    font-weight: 300;
+  }
+
+  .legend {
+    display: flex;
+    gap: 24px;
+    padding: 16px 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+    z-index: 10;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #666;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .canvas {
+    position: relative;
+    z-index: 5;
+    padding: 48px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* SVG arrows layer */
+  .arrows-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .card {
+    border-radius: 12px;
+    border: 1px solid;
+    padding: 20px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+  }
+
+  /* Color themes per card type */
+  .card-macro {
+    background: linear-gradient(135deg, #0f1a0f, #0a120a);
+    border-color: #1a4d1a;
+    box-shadow: 0 0 30px rgba(40, 180, 40, 0.06);
+  }
+  .card-macro:hover { box-shadow: 0 8px 40px rgba(40, 180, 40, 0.15); }
+
+  .card-event {
+    background: linear-gradient(135deg, #0f0f1a, #0a0a12);
+    border-color: #1a1a4d;
+    box-shadow: 0 0 30px rgba(80, 80, 220, 0.06);
+  }
+  .card-event:hover { box-shadow: 0 8px 40px rgba(80, 80, 220, 0.15); }
+
+  .card-signal {
+    background: linear-gradient(135deg, #1a0f0a, #120a06);
+    border-color: #4d2a1a;
+    box-shadow: 0 0 30px rgba(220, 120, 40, 0.06);
+  }
+  .card-signal:hover { box-shadow: 0 8px 40px rgba(220, 120, 40, 0.15); }
+
+  .card-process {
+    background: linear-gradient(135deg, #1a0a1a, #12061a);
+    border-color: #3d1a4d;
+    box-shadow: 0 0 30px rgba(160, 60, 220, 0.06);
+  }
+  .card-process:hover { box-shadow: 0 8px 40px rgba(160, 60, 220, 0.15); }
+
+  .card-scheduler {
+    background: linear-gradient(135deg, #1a1a0a, #12120a);
+    border-color: #4d4d1a;
+    box-shadow: 0 0 30px rgba(220, 200, 40, 0.06);
+  }
+  .card-scheduler:hover { box-shadow: 0 8px 40px rgba(220, 200, 40, 0.15); }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .tag-macro { background: rgba(40,180,40,0.15); color: #4dff4d; }
+  .tag-event { background: rgba(80,80,220,0.15); color: #8080ff; }
+  .tag-signal { background: rgba(220,120,40,0.15); color: #ff9955; }
+  .tag-process { background: rgba(160,60,220,0.15); color: #cc77ff; }
+  .tag-scheduler { background: rgba(220,200,40,0.15); color: #ffee44; }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .card-file {
+    font-size: 10px;
+    color: #444;
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #444;
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .field-type { color: #569cd6; font-weight: 300; }
+  .field-name { color: #9cdcfe; }
+  .field-note { color: #444; font-size: 10px; margin-left: auto; }
+
+  .fns {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .fn {
+    font-size: 10.5px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.02);
+    border-left: 2px solid;
+    color: #ccc;
+    transition: background 0.15s;
+  }
+  .fn:hover { background: rgba(255,255,255,0.06); }
+
+  .fn-macro { border-color: #2d8a2d; }
+  .fn-event { border-color: #3a3ab0; }
+  .fn-signal { border-color: #a05520; }
+  .fn-process { border-color: #7a30b0; }
+  .fn-scheduler { border-color: #a09820; }
+
+  .fn-name { color: #dcdcaa; }
+  .fn-args { color: #888; font-size: 10px; }
+
+  .macro-box {
+    font-size: 10px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: rgba(40,180,40,0.05);
+    border: 1px solid rgba(40,180,40,0.15);
+    color: #4dff4d;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .macro-arrow {
+    color: #333;
+    font-size: 9px;
+    text-align: center;
+    margin: 2px 0;
+  }
+
+  .macro-result {
+    font-size: 10px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: #9cdcfe;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Connection flow at bottom */
+  .flow {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #0f0f0f, #0a0a0a);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+
+  .flow-title {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 16px;
+  }
+
+  .flow-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .flow-bubble {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .flow-sub {
+    font-size: 9px;
+    color: #444;
+    text-align: center;
+    max-width: 100px;
+  }
+
+  .flow-arrow {
+    font-size: 18px;
+    color: #333;
+    margin-top: -16px;
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 12px 0;
+  }
+
+  .span-2 { grid-column: span 2; }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<header>
+  <h1>COP7001 · Parallax</h1>
+  <h2>Architecture Map — Core Module</h2>
+  <p>2025MCS2098 · Chirag Kathpalia · as of 11-03-26</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#2d8a2d"></div>Macros / Utils</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3a3ab0"></div>Event System</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a05520"></div>Signal</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7a30b0"></div>Process</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a09820"></div>Scheduler</div>
+</div>
+
+<div class="canvas">
+
+  <!-- UTILS.H -->
+  <div class="card card-macro">
+    <div class="card-tag tag-macro">Foundation</div>
+    <div class="card-title">utils.h</div>
+    <div class="card-file">src/core/utils.h</div>
+
+    <div class="section-label">Macros</div>
+    <div class="macro-box">DYNARRAY_TYPE(T)</div>
+    <div class="macro-arrow">↓ generates</div>
+    <div class="macro-result">DynArray_T { T *data; int size; int capacity; }</div>
+    <div class="divider"></div>
+    <div class="fns">
+      <div class="fn fn-macro"><span class="fn-name">DYNARRAY_INIT</span><span class="fn-args">(arr)</span></div>
+      <div class="fn fn-macro"><span class="fn-name">DYNARRAY_GROW</span><span class="fn-args">(arr) — realloc ×2</span></div>
+      <div class="fn fn-macro"><span class="fn-name">DYNARRAY_INSERT</span><span class="fn-args">(arr, val) — grow + insert</span></div>
+    </div>
+
+    <div class="section-label">Instantiated Types</div>
+    <div class="fields">
+      <div class="field"><span class="field-type">typedef</span><span class="field-name">DynArray_Event</span><span class="field-note">→ EventQueue</span></div>
+      <div class="field"><span class="field-type">typedef</span><span class="field-name">DynArray_Signal</span><span class="field-note">→ sensitivity list</span></div>
+      <div class="field"><span class="field-type">typedef</span><span class="field-name">DynArray_Process</span><span class="field-note">→ Scheduler</span></div>
+    </div>
+  </div>
+
+  <!-- EVENT -->
+  <div class="card card-event">
+    <div class="card-tag tag-event">Event System</div>
+    <div class="card-title">Event + EventQueue</div>
+    <div class="card-file">src/core/event.h · event_queue.h/c</div>
+
+    <div class="section-label">Event struct</div>
+    <div class="fields">
+      <div class="field"><span class="field-type">double</span><span class="field-name">time</span></div>
+      <div class="field"><span class="field-type">int</span><span class="field-name">type</span></div>
+    </div>
+
+    <div class="section-label">EventQueue = DynArray_Event (min-heap)</div>
+    <div class="fields">
+      <div class="field"><span class="field-type">Event*</span><span class="field-name">data</span></div>
+      <div class="field"><span class="field-type">int</span><span class="field-name">size</span></div>
+      <div class="field"><span class="field-type">int</span><span class="field-name">capacity</span></div>
+    </div>
+
+    <div class="section-label">Functions</div>
+    <div class="fns">
+      <div class="fn fn-event"><span class="fn-name">init_queue</span><span class="fn-args">() → EventQueue</span></div>
+      <div class="fn fn-event"><span class="fn-name">insert_ele</span><span class="fn-args">(EventQueue*, Event) — grow+heapify↑</span></div>
+      <div class="fn fn-event"><span class="fn-name">extract_min</span><span class="fn-args">(EventQueue*) → Event — heapify↓</span></div>
+    </div>
+  </div>
+
+  <!-- SIGNAL -->
+  <div class="card card-signal">
+    <div class="card-tag tag-signal">Signal</div>
+    <div class="card-title">Signal</div>
+    <div class="card-file">src/core/signal.h/c</div>
+
+    <div class="section-label">Struct</div>
+    <div class="fields">
+      <div class="field"><span class="field-type">int</span><span class="field-name">value</span></div>
+      <div class="field"><span class="field-type">char*</span><span class="field-name">name</span></div>
+      <div class="field"><span class="field-type">double</span><span class="field-name">last_change_on</span></div>
+      <div class="field"><span class="field-type">int</span><span class="field-name">type</span></div>
+    </div>
+
+    <div class="section-label">Functions</div>
+    <div class="fns">
+      <div class="fn fn-signal"><span class="fn-name">init_signal</span><span class="fn-args">(char* name) → Signal*</span></div>
+      <div class="fn fn-signal"><span class="fn-name">update_signal</span><span class="fn-args">(Signal*, int val, double time)</span></div>
+      <div class="fn fn-signal"><span class="fn-name">get_signal_value</span><span class="fn-args">(Signal*) → int</span></div>
+      <div class="fn fn-signal"><span class="fn-name">get_signal_last_change</span><span class="fn-args">(Signal*) → double</span></div>
+    </div>
+
+    <div class="section-label">Also declares</div>
+    <div class="macro-box" style="font-size:10px">DYNARRAY_TYPE(Signal) → DynArray_Signal</div>
+  </div>
+
+  <!-- PROCESS -->
+  <div class="card card-process span-2">
+    <div class="card-tag tag-process">Process</div>
+    <div class="card-title">Process</div>
+    <div class="card-file">src/core/process.h/c</div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+      <div>
+        <div class="section-label">Struct</div>
+        <div class="fields">
+          <div class="field"><span class="field-type">int</span><span class="field-name">id</span><span class="field-note">auto-incremented</span></div>
+          <div class="field"><span class="field-type">char*</span><span class="field-name">name</span></div>
+          <div class="field"><span class="field-type">DynArray_Signal</span><span class="field-name">sensitivity_list</span></div>
+          <div class="field"><span class="field-type">void(*)</span><span class="field-name">run(void)</span><span class="field-note">fn pointer</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Functions</div>
+        <div class="fns">
+          <div class="fn fn-process"><span class="fn-name">process_init</span><span class="fn-args">(char* name, void(*run)(void)) → Process</span></div>
+          <div class="fn fn-process"><span class="fn-name">process_add_signal</span><span class="fn-args">(Process*, Signal) — inserts into sensitivity_list</span></div>
+          <div class="fn fn-process"><span class="fn-name">process_print_signals</span><span class="fn-args">(Process*) — prints all watched signals</span></div>
+        </div>
+
+        <div class="section-label">Key idea</div>
+        <div style="font-size:10px; color:#666; line-height:1.6; padding: 6px 8px; border-radius:4px; background:rgba(255,255,255,0.02)">
+          sensitivity_list is a DynArray_Signal.<br>
+          When a signal in this list changes,<br>
+          <span style="color:#cc77ff">run()</span> gets called by the Scheduler.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEDULER -->
+  <div class="card card-scheduler">
+    <div class="card-tag tag-scheduler">Scheduler</div>
+    <div class="card-title">Scheduler</div>
+    <div class="card-file">src/core/scheduler.h/c</div>
+
+    <div class="section-label">Struct</div>
+    <div class="fields">
+      <div class="field"><span class="field-type">DynArray_Process</span><span class="field-name">process_ARRAY</span></div>
+    </div>
+
+    <div class="section-label">Functions</div>
+    <div class="fns">
+      <div class="fn fn-scheduler"><span class="fn-name">scheduler_init</span><span class="fn-args">() → Scheduler</span></div>
+      <div class="fn fn-scheduler"><span class="fn-name">scheduler_add_process</span><span class="fn-args">(Scheduler*, Process)</span></div>
+      <div class="fn fn-scheduler"><span class="fn-name">scheduler_notify</span><span class="fn-args">(Scheduler*, Signal) — wakes matching processes</span></div>
+    </div>
+
+    <div class="section-label">notify logic</div>
+    <div style="font-size:10px; color:#888; line-height:1.8; padding:6px 8px; border-radius:4px; background:rgba(255,255,255,0.02); font-family:'JetBrains Mono',monospace">
+      <span style="color:#ffee44">for</span> each process i<br>
+      &nbsp;&nbsp;<span style="color:#ffee44">for</span> each signal j in i.sensitivity_list<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffee44">if</span> strcmp(j.name, s.name) == 0<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;process_ARRAY[i].<span style="color:#dcdcaa">run</span>()
+    </div>
+  </div>
+
+  <!-- DATA FLOW -->
+  <div class="flow">
+    <div class="flow-title">Runtime Data Flow — signal change triggers process</div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-bubble" style="background:rgba(220,120,40,0.15);color:#ff9955;border:1px solid rgba(220,120,40,0.3)">Signal changes</div>
+        <div class="flow-sub">update_signal() called</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-bubble" style="background:rgba(220,200,40,0.15);color:#ffee44;border:1px solid rgba(220,200,40,0.3)">scheduler_notify()</div>
+        <div class="flow-sub">pass changed Signal</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-bubble" style="background:rgba(220,200,40,0.1);color:#aaa;border:1px solid rgba(255,255,255,0.1)">loop all processes</div>
+        <div class="flow-sub">O(n×m) scan</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-bubble" style="background:rgba(220,200,40,0.1);color:#aaa;border:1px solid rgba(255,255,255,0.1)">strcmp match?</div>
+        <div class="flow-sub">check sensitivity_list</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-bubble" style="background:rgba(160,60,220,0.15);color:#cc77ff;border:1px solid rgba(160,60,220,0.3)">process.run()</div>
+        <div class="flow-sub">wake up process</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-bubble" style="background:rgba(80,80,220,0.15);color:#8080ff;border:1px solid rgba(80,80,220,0.3)">insert_ele()</div>
+        <div class="flow-sub">may queue new events</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

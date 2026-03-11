@@ -54,7 +54,12 @@ void insert_ele(EventQueue* p1, Event e)
     // p1->data[p1->size]=e;
     // p1->size++;
     //heapify starts here basically if its smaller than parent swap its place
-    while(p1->data[tempsize].time<p1->data[((tempsize)-1)/2].time)
+    // while(p1->data[tempsize].time<p1->data[((tempsize)-1)/2].time)
+    //CHIRAG 12-03-26 00:14 :: okay so we need to update heapify condition as we have a change in while loop
+    // so maybe condition becomes 
+    while((p1->data[tempsize].time < p1->data[((tempsize)-1)/2].time)  
+    || ((p1->data[tempsize].time == p1->data[((tempsize)-1)/2].time) 
+    && (p1->data[tempsize].delta < p1->data[((tempsize)-1)/2].delta)) )
     {
         Event temp = p1->data[tempsize];
         p1->data[tempsize] = p1->data[(tempsize-1)/2];
@@ -84,14 +89,28 @@ Event extract_min(EventQueue *q)
     int i =0;
     while(1)
     {
-        if((2*i+1<q->size)&& q->data[i].time>q->data[2*i+1].time)
+        // if((2*i+1<q->size)&& q->data[i].time>q->data[2*i+1].time )
+        if(
+        (2*i+1<q->size) 
+        && ( (q->data[i].time>q->data[2*i+1].time) 
+        || ((q->data[i].time==q->data[2*i+1].time) && (q->data[i].delta>q->data[2*i+1].delta) ) 
+        )  
+        )
+        
         {
             Event t= q->data[i];
             q->data[i]= q->data[2*i+1];
             q->data[2*i+1]= t;
             i= 2*i+1;
         }
-        else if((2*i+2<q->size) && q->data[i].time>q->data[2*i+2].time)
+        // else if((2*i+2<q->size) && q->data[i].time>q->data[2*i+2].time)
+        else if(
+        (2*i+2<q->size) 
+        && ( (q->data[i].time>q->data[2*i+2].time) 
+        || ((q->data[i].time==q->data[2*i+2].time) && (q->data[i].delta>q->data[2*i+2].delta) ) 
+        )  
+        )
+        
         {
             Event t= q->data[i];
             q->data[i]= q->data[2*i+2];
