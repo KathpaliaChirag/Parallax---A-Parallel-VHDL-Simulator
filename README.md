@@ -44,14 +44,16 @@ DYNARRAY_TYPE(Signal)  // generates DynArray_Signal
 
 //CHIRAG : 07-03-2026 : was ill last 4-5 days will pull all work today and do it all....
 //----------------------------------------------------------------------------
-
+//-----------------------------------------------------------------------------
  ### day 22 — process representation
 a process in VHDL wakes up when signals it cares about change. need to represent that.
 
 - write process.h — process struct with sensitivity list and a function pointer
 - write process.c — register a process, list what signals it watches
 - done when: can create a process with a sensitivity list
-
+Okay so above tasks are done on 10-03-26 i am running quite late .... and deadline is also shortened by kolin sir 
+need to increase speed
+//-----------------------------------------------------------------------------
 ### day 23 — connect signals and processes
 when a signal changes, the right processes need to wake up. this is the connection between day 21 and day 22.
 
