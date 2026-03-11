@@ -19,6 +19,12 @@
 #include "./src/core/signal.c"
 #include "./src/core/process.c"
 #include "./src/core/process.h"
+#include "./src/core/scheduler.h"
+#include "./src/core/scheduler.c"
+void my_run(void)
+{
+    printf("\nHello world by CK\n");
+}
 int main()
 {
 
@@ -62,8 +68,19 @@ int main()
     //-----------------------------------------------------
     //CHIRAG 10-03-25 (13:05) :
     //okay so since i added process implementation now its time to write up a static test and try to check it 
-    Process p= process_init("murphy", NULL);
+    Process p= process_init("murphy", my_run);
     process_add_signal(&p, *temp2);
     process_print_signals(&p);
+
+    // CHIRAG 11-03-26 21:50 : IDEA is to simply make a dummy my run function that prints hello world
+    // then scheduler_init and ceate empty schduler 
+    // add the dummy process murphy to it which wakes up my_run function to print hello world
+    // add process to signal, and schduler add that process then we change signal and it should call sheduler notify 
+    // maybe where we update signal value there itself we can add scheduler notify  
+    printf("\n \n \n THE SCHEDULER TEST STARTS HERE");
+    Scheduler sch= scheduler_init();
+    scheduler_add_process(&sch, p);
+    
+    scheduler_notify(&sch, *temp2);
     return 0;
 }

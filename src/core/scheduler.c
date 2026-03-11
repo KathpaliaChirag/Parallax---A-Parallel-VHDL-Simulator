@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include "scheduler.h"
-
+#include <string.h>
 Scheduler scheduler_init()
 {
     Scheduler p;
