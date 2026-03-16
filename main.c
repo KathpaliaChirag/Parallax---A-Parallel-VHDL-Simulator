@@ -37,6 +37,15 @@ void my_run2(void)
 {
     printf("\nHello world by CK-C\n");
 }
+
+Signal *X, *Y, *Z;
+void adder(void)
+{
+    print_state();
+    // printf("\n Sum is " (X->value&Y->value));
+    printf("AND: X=%d Y=%d Z=%d\n", X->value, Y->value, X->value & Y->value);
+}
+
 int main()
 {
 
@@ -127,63 +136,127 @@ int main()
      8. run_simulation(&queue, &sch, &signals)
     */
    // CHIRAG 16-03-26 22:27 :: first real simulation test.... signal A changes at t=1,d=0 and process A should wake up
-    init_run(); // start everything at time=0, delta=0, changed=0
+    // init_run(); // start everything at time=0, delta=0, changed=0
 
-    // create signal A .... this is what the process will be watching
-    Signal* A = init_signal("A");
-    Signal *B = init_signal("B");
-    Signal* C = init_signal("C");
+    // // create signal A .... this is what the process will be watching
+    // Signal* A = init_signal("A");
+    // Signal *B = init_signal("B");
+    // Signal* C = init_signal("C");
 
-    // seed the event queue with one event .... A changes to value 1 at time=1, delta=0
-    Event e;
-    e.signal_name = A->name; // which signal this targets
-    e.new_value = 1;         // what value it changes to
-    e.time = 1;              // when it happens
-    e.delta = 0;             // first delta at this time
-    e.type = 0;
+    // // seed the event queue with one event .... A changes to value 1 at time=1, delta=0
+    // Event e;
+    // e.signal_name = A->name; // which signal this targets
+    // e.new_value = 1;         // what value it changes to
+    // e.time = 1;              // when it happens
+    // e.delta = 0;             // first delta at this time
+    // e.type = 0;
 
-    Event f;
-    f.signal_name = B->name; // which signal this targets
-    f.new_value = 1;         // what value it changes to
-    f.time = 1;              // when it happens
-    f.delta = 1;            
-    f.type = 0;
+    // Event f;
+    // f.signal_name = B->name; // which signal this targets
+    // f.new_value = 1;         // what value it changes to
+    // f.time = 1;              // when it happens
+    // f.delta = 1;            
+    // f.type = 0;
 
-    Event g;
-    g.signal_name = C->name; // which signal this targets
-    g.new_value = 1;         // what value it changes to
-    g.time = 2;              // when it happens
-    g.delta = 0;            
-    g.type = 0;
+    // Event g;
+    // g.signal_name = C->name; // which signal this targets
+    // g.new_value = 1;         // what value it changes to
+    // g.time = 2;              // when it happens
+    // g.delta = 0;            
+    // g.type = 0;
 
-    // queue it up
-    EventQueue EQ = init_queue();
-    insert_ele(&EQ, e);
-    insert_ele(&EQ, g);
-    insert_ele(&EQ, f);
+    // // queue it up
+    // EventQueue EQ = init_queue();
+    // insert_ele(&EQ, e);
+    // insert_ele(&EQ, g);
+    // insert_ele(&EQ, f);
 
-    // signals list .... run_simulation needs this to look up signals by name
-    DynArray_Signal signals;
-    DYNARRAY_INIT(signals)
-    DYNARRAY_INSERT(signals, *A)
-    DYNARRAY_INSERT(signals, *B)
-    DYNARRAY_INSERT(signals, *C)
+    // // signals list .... run_simulation needs this to look up signals by name
+    // DynArray_Signal signals;
+    // DYNARRAY_INIT(signals)
+    // DYNARRAY_INSERT(signals, *A)
+    // DYNARRAY_INSERT(signals, *B)
+    // DYNARRAY_INSERT(signals, *C)
 
-    // process A watches signal A .... wakes up and calls my_run when A changes
-    Process p = process_init("A", my_run);
-    Process Q = process_init("B", my_run1);
-    Process R = process_init("C", my_run2);
-    process_add_signal(&p, *A);
-    process_add_signal(&Q, *B);
-    process_add_signal(&R, *C);
+    // // process A watches signal A .... wakes up and calls my_run when A changes
+    // Process p = process_init("A", my_run);
+    // Process Q = process_init("B", my_run1);
+    // Process R = process_init("C", my_run2);
+    // process_add_signal(&p, *A);
+    // process_add_signal(&Q, *B);
+    // process_add_signal(&R, *C);
 
-    // scheduler holds all processes .... notifies them when signals change
-    Scheduler sch = scheduler_init();
-    scheduler_add_process(&sch, p);
-    scheduler_add_process(&sch, Q);
-    scheduler_add_process(&sch, R);
+    // // scheduler holds all processes .... notifies them when signals change
+    // Scheduler sch = scheduler_init();
+    // scheduler_add_process(&sch, p);
+    // scheduler_add_process(&sch, Q);
+    // scheduler_add_process(&sch, R);
 
-    // lets gooo
-    run_simulation(&EQ, &sch, &signals);
+    // // lets gooo
+    // run_simulation(&EQ, &sch, &signals);
+
+    //-----------Simulation of AND Hardcoded starts here for sanity check -------------
+    // CHIRAG : 16-03-2026 - 23:35 ::
+    init_run(); // step 1 : starts simulation
+    
+    // // initialise signals of input and output 
+    X = init_signal("input-X");
+    Y = init_signal("input-Y");
+    Z = init_signal("Output-Z");
+
+    // two events
+    Event I1;
+    I1.signal_name = X->name;
+    I1.new_value= 1;
+    I1.time=1;
+    I1.delta=0;
+    I1.type=0;
+    
+    EventQueue Adder= init_queue();
+    insert_ele(&Adder, I1);
+    Event I2;
+    I2.signal_name = Y->name;
+    I2.new_value= 1;
+    I2.time=1;
+    I2.delta=5;
+    I2.type=0;
+    insert_ele(&Adder, I2);
+    I1.new_value= 0;
+    I1.time=3;
+    I1.delta=2;
+    // I1.type=0;
+    insert_ele(&Adder, I1);
+    I1.new_value= 1;
+    I1.time=5;
+    I1.delta=2;
+    // I2.type=0;
+    insert_ele(&Adder, I1);
+    // updated each change in event queue
+    //made sestivity list of signals
+
+    DynArray_Signal Adder_sig;
+    DYNARRAY_INIT(Adder_sig);
+    DYNARRAY_INSERT(Adder_sig, *X);
+    DYNARRAY_INSERT(Adder_sig, *Y);
+    DYNARRAY_INSERT(Adder_sig, *Z);
+    // CHIRAG 17-03-26 00:20 :: subtle pointer bug.... took a moment to figure out
+    // when we do DYNARRAY_INSERT(Adder_sig, *X) it inserts a COPY of the signal struct
+    // so now there are two separate copies in memory.... X pointer and Adder_sig.data[0]
+    // run_simulation updates Adder_sig.data[0].value correctly when event fires
+    // but adder() reads X->value which is the original copy.... still 0 forever
+    // fix: after inserting, point X Y Z directly at the array entries
+    // now X->value and Adder_sig.data[0].value are the SAME memory location
+    // so when run_simulation updates the array, adder() sees it too
+    X = &Adder_sig.data[0];
+    Y = &Adder_sig.data[1];
+    Z = &Adder_sig.data[2];
+
+    Process adding = process_init("Input_add", adder);
+    process_add_signal(&adding, *X );
+    process_add_signal(&adding, *Y );
+
+    Scheduler adding_sch= scheduler_init();
+    scheduler_add_process(&adding_sch, adding);
+    run_simulation(&Adder, &adding_sch, &Adder_sig);
     return 0;
 }

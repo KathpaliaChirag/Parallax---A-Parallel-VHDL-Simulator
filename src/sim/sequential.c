@@ -45,14 +45,25 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
         // if(p->size > 0)
         //     advance_time();
         // CHIRAG 16-03-26 23:15 :: okay so ran into a nasty infinite loop bug here.... took a while to figure out
-// problem was advance_time() was running every iteration even when there were still events at current_time
-// so it would jump to next event time, find no events at new delta, changed stays 0, do-while exits...
-// but then advance_time runs AGAIN setting current_time to same event time since queue didnt move.... infinite
-// fix was simple in hindsight.... only advance time when next event in queue is actually at a FUTURE time
-// i.e. p->data[0].time > current_time .... that way we dont skip ahead prematurely
-// lesson learned.... always check boundary conditions on time advancement in event driven sims
+        // problem was advance_time() was running every iteration even when there were still events at current_time
+        // so it would jump to next event time, find no events at new delta, changed stays 0, do-while exits...
+        // but then advance_time runs AGAIN setting current_time to same event time since queue didnt move.... infinite
+        // fix was simple in hindsight.... only advance time when next event in queue is actually at a FUTURE time
+        // i.e. p->data[0].time > current_time .... that way we dont skip ahead prematurely
+        // lesson learned.... always check boundary conditions on time advancement in event driven sims
 
+        // if(p->size > 0 && p->data[0].time > current_time)
+        //     advance_time(p);
+        // CHIRAG 17-03-26 00:08 :: another subtle infinite loop.... took a while to spot this one
+        // problem was after processing event at (t=1, d=0) we advance_delta so delta becomes 1
+        // do-while exits correctly since changed=0.... but then advance_time check fails
+        // because next event is at time=1 same as current_time so condition p->data[0].time > current_time is false
+        // so we never advance time OR delta.... outer while loops forever stuck at (t=1, d=1)
+        // fix: if next event is at same time but higher delta.... just jump delta forward directly
+        // lesson: time advancement alone isnt enough.... need to handle delta jumps within same timestamp too
         if(p->size > 0 && p->data[0].time > current_time)
             advance_time(p);
+        else if(p->size > 0 && p->data[0].delta > delta)
+           delta = p->data[0].delta; // jump delta forward to next event's delta
     }
 }
