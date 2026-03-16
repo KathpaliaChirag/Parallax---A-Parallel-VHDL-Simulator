@@ -48,32 +48,32 @@ DYNARRAY_TYPE(Signal)  // generates DynArray_Signal
  ### day 22 — process representation
 a process in VHDL wakes up when signals it cares about change. need to represent that.
 
-- write process.h — process struct with sensitivity list and a function pointer
-- write process.c — register a process, list what signals it watches
-- done when: can create a process with a sensitivity list
+- write process.h — process struct with sensitivity list and a function pointer (done)
+- write process.c — register a process, list what signals it watches(done)
+- done when: can create a process with a sensitivity list (done)
 Okay so above tasks are done on 10-03-26 i am running quite late .... and deadline is also shortened by kolin sir 
 need to increase speed
 //-----------------------------------------------------------------------------
 ### day 23 — connect signals and processes
 when a signal changes, the right processes need to wake up. this is the connection between day 21 and day 22.
 
-- write scheduler.h/c — given a signal change, find which processes care
-- done when: signal change correctly notifies the right processes
+- write scheduler.h/c — given a signal change, find which processes care (done)
+- done when: signal change correctly notifies the right processes (done)
 
 ### day 24 — delta cycles, understanding first
 delta cycles are the trickiest part of VHDL. zero time, cascading updates. need to actually understand this before coding it.
 
-- read about delta cycles properly, not just skim
-- extend event struct to have (time, delta) ordering
-- write delta.h/c — delta counter, distinguish delta event from time event
-- done when: events have proper (time, delta) ordering
+- read about delta cycles properly, not just skim (done)
+- extend event struct to have (time, delta) ordering (done)
+- write delta.h/c — delta counter, distinguish delta event from time event (done)
+- done when: events have proper (time, delta) ordering (done)
 
 ### day 25 — delta cycle engine
 now actually make the simulation loop handle delta cycles correctly.
 
-- keep processing delta events until there are none left
-- only advance simulation time when delta queue is empty
-- done when: a simple cascading signal update works without time advancing
+- keep processing delta events until there are none left (done)
+- only advance simulation time when delta queue is empty (done)
+- done when: a simple cascading signal update works without time advancing (done)
 
 ### day 26 — hardcode an AND gate
 no parser yet. manually describe a circuit in C and simulate it. this is the sanity check.
