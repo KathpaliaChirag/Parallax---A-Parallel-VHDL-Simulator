@@ -11,13 +11,14 @@
 // current_time, delta, and changed. They won't share the same state.
 #include "process.h"
 #include "event.h"
+#include "event_queue.h"
 extern double current_time;
 extern int delta;
 extern int changed;
 // well just doing definitions here and implementation as usual goes to .c
 void init_run();
 void advance_delta();
-void advance_time();
+void advance_time(EventQueue * q);
 int detect_change();
 void print_state();
 #endif

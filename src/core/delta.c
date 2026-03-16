@@ -19,9 +19,10 @@ delta ++;
 changed =0;
 }
 
-void advance_time()
+void advance_time(EventQueue* q)
 {
-    current_time++;
+    // current_time++;
+    current_time = q->data[0].time;
     delta =0;
     changed=0;
 }

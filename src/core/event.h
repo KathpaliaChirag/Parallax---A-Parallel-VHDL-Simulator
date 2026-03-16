@@ -13,8 +13,10 @@ typedef struct
     {
         double time;
         int delta; // CHIRAG 12-03-26 00:00 :: added this line...okay so concept of deltas is interesting one descibed below
-
         int type;
+
+        char* signal_name; // CHIRAG 16-03-26 :: added this ans below line while making schduler and run simthough of running signal by event
+        int new_value;// could not think what to do so connecting event and adding signal here to trigger 
     } Event;
 
 #endif
