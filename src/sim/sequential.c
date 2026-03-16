@@ -29,7 +29,10 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
                 for(int i=0 ; i < signal->size; i++)
                 if(strcmp(signal->data[i].name, e.signal_name) == 0)
                 {
+                signal->data[i].prev_value = signal->data[i].value;
                 signal->data[i].value= e.new_value;
+                signal->data[i].last_change_delta = delta; 
+                signal->data[i].last_change_on = current_time;
 
                 scheduler_notify(sch, signal->data[i]);
                 changed=1;
@@ -61,9 +64,16 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
         // so we never advance time OR delta.... outer while loops forever stuck at (t=1, d=1)
         // fix: if next event is at same time but higher delta.... just jump delta forward directly
         // lesson: time advancement alone isnt enough.... need to handle delta jumps within same timestamp too
+        if(p->size > 0)
+            printf("next event: t=%f d=%d\n", p->data[0].time, p->data[0].delta);
+        // if(p->size > 0 && p->data[0].time > current_time)
+        //     advance_time(p);
+        // else if(p->size > 0 && p->data[0].delta > delta)
+        //    delta = p->data[0].delta; // jump delta forward to next event's delta
         if(p->size > 0 && p->data[0].time > current_time)
             advance_time(p);
-        else if(p->size > 0 && p->data[0].delta > delta)
-           delta = p->data[0].delta; // jump delta forward to next event's delta
+        else if(p->size > 0 && p->data[0].time == current_time 
+                && p->data[0].delta > delta)
+            delta = p->data[0].delta;
     }
 }

@@ -11,7 +11,10 @@ typedef struct
 int value;
 char* name;
 double last_change_on;
+int last_change_delta;
 int type;
+int prev_value; //CHIRAG -17-03-26 : 1:35 ::  was just thinking and realised that we would sorta need prev value to implement clock 
+// say i wanna make a D Flipflop now the thing is D FF will change output only when clock goes 0 to 1 so yeah we need it  
 } Signal;
 DYNARRAY_TYPE(Signal) //added here as a part of design choice CHIRAG-10-03-26 12:26
 #endif

@@ -38,12 +38,29 @@ void my_run2(void)
     printf("\nHello world by CK-C\n");
 }
 
-Signal *X, *Y, *Z;
+Signal *X, *Y, *Z, *D, *Q, *CLK;
+EventQueue *dff_queue;
 void adder(void)
 {
     print_state();
     // printf("\n Sum is " (X->value&Y->value));
     printf("AND: X=%d Y=%d Z=%d\n", X->value, Y->value, X->value & Y->value);
+}
+
+// void dff_logic(void)
+// {
+//     if(CLK->prev_value==0 && CLK->value==1)
+//     Q->value= D->value;
+// }
+
+void dff_logic(void) {
+    if(CLK->prev_value == 0 && CLK->value == 1 
+       && CLK->last_change_on == current_time
+       && CLK->last_change_delta == delta) {
+        Q->value = D->value;
+        printf("DFF triggered: D=%d Q=%d at t=%f d=%d\n", 
+               D->value, Q->value, current_time, delta);
+    }
 }
 
 int main()
@@ -258,5 +275,75 @@ int main()
     Scheduler adding_sch= scheduler_init();
     scheduler_add_process(&adding_sch, adding);
     run_simulation(&Adder, &adding_sch, &Adder_sig);
+    //--------------ADDER SIMULATION ENDS HERE-------------------
+
+    //--------------D Flipflop --------------------------------
+    // CHIRAG 17-03-26 : 3:15 ::
+    // okay so idea goes here  will have 1 input D, output Q and a clk signal for clock
+    // one process dff which will watch clk and D
+    // in dff will chk if clock rose to 1 then will try for updating Q
+    init_run();
+    D   = init_signal("Input-D");
+    Q   = init_signal("Output-Q");
+    CLK = init_signal("CLOCK-CLK");
+    
+    // t=1: D=1 before clock rises, CLK rises → Q should capture 1
+    EventQueue Change = init_queue();
+    
+    Event ev;
+    
+    // D goes to 1 slightly before CLK rises (same time, lower delta)
+    ev.signal_name = D->name; ev.new_value = 1;
+    ev.time = 1; ev.delta = 0; ev.type = 0;
+    insert_ele(&Change, ev);
+    
+    // CLK rises at t=1, d=1 → Q should become 1
+    ev.signal_name = CLK->name; ev.new_value = 1;
+    ev.time = 1; ev.delta = 1; ev.type = 0;
+    insert_ele(&Change, ev);
+    
+    // CLK falls at t=2
+    ev.signal_name = CLK->name; ev.new_value = 0;
+    ev.time = 2; ev.delta = 0; ev.type = 0;
+    insert_ele(&Change, ev);
+    
+    // D goes to 0 at t=3 before CLK rises
+    ev.signal_name = D->name; ev.new_value = 0;
+    ev.time = 3; ev.delta = 0; ev.type = 0;
+    insert_ele(&Change, ev);
+    
+    // CLK rises at t=3, d=1 → Q should become 0
+    ev.signal_name = CLK->name; ev.new_value = 1;
+    ev.time = 3; ev.delta = 1; ev.type = 0;
+    insert_ele(&Change, ev);
+    
+    // CLK falls at t=4
+    ev.signal_name = CLK->name; ev.new_value = 0;
+    ev.time = 4; ev.delta = 0; ev.type = 0;
+    insert_ele(&Change, ev);
+    
+    DynArray_Signal Dflipflop;
+    DYNARRAY_INIT(Dflipflop);
+    DYNARRAY_INSERT(Dflipflop, *D);
+    DYNARRAY_INSERT(Dflipflop, *Q);
+    DYNARRAY_INSERT(Dflipflop, *CLK);
+    D   = &Dflipflop.data[0];
+    Q   = &Dflipflop.data[1];
+    CLK = &Dflipflop.data[2];
+    
+    Process Dffs = process_init("Dff", dff_logic);
+    process_add_signal(&Dffs, *D);
+    process_add_signal(&Dffs, *CLK);
+    
+    Scheduler Update = scheduler_init();
+    scheduler_add_process(&Update, Dffs);
+    dff_queue = &Change;
+    printf("Queue contents:\n");
+    for(int i=0; i<Change.size; i++)
+        printf("  t=%f d=%d sig=%s val=%d\n", 
+               Change.data[i].time, Change.data[i].delta,
+               Change.data[i].signal_name, Change.data[i].new_value);
+    run_simulation(&Change, &Update, &Dflipflop);
+    //---------------------------------------------------------
     return 0;
 }

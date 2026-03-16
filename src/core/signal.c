@@ -16,13 +16,16 @@ Signal* init_signal(char *n)
     s->name = n;
     s->value = 0;
     s->last_change_on = 0;
+    s->last_change_delta= 0;
     s->type =0;
+    s->prev_value = 0;
     return s;
 }
 //as for update signla initial thought was time will come from the system
 //later realised its a simulator so actual tome should come from the sim itself not us
 void update_signal(Signal* s,int val, double time)
 {
+s->prev_value=s->value;
 s->value = val;
 s->last_change_on = time;
 }

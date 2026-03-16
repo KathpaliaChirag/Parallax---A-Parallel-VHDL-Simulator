@@ -22,6 +22,7 @@ changed =0;
 void advance_time(EventQueue* q)
 {
     // current_time++;
+    printf("advancing time to %f\n", q->data[0].time);
     current_time = q->data[0].time;
     delta =0;
     changed=0;
