@@ -25,6 +25,9 @@
 #include "./src/core/delta.c"
 #include"./src/sim/sequential.h"
 #include"./src/sim/sequential.c"
+#include"./src/output/vcd.h"
+#include"./src/output/vcd.c"
+// #include"./src/sim/sequential.c"
 void my_run(void)
 {
     printf("\nHello world by CK-A\n");
@@ -44,6 +47,23 @@ void adder(void)
 {
     print_state();
     // printf("\n Sum is " (X->value&Y->value));
+    // CHIRAG 17-03-26: 15:03 :: okay so Z output of AND gate was not showing in waveform.... stayed 0 always
+    // reason was adder() was computing X&Y and printing it but never actually updating Z->value
+    // and since vcd_write_change only gets called from sequential.c when an event updates a signal
+    // Z never had an event.... so VCD never recorded any Z change.... flatline on GTKWave
+    //
+    // TEMPORARY FIX : directly set Z->value = X->value & Y->value inside adder()
+    // and manually call vcd_write_change(*Z, current_time) from there
+    // this works for the demo but bypasses the event system entirely
+    // Z update is not going through the queue.... no event, no delta ordering for Z
+    //
+    // PROPER FIX FOR LATER : adder() should insert a new Z event into the queue
+    // same pattern as dff_logic.... need a global adder_queue pointer
+    // then sequential.c picks it up, updates Z properly, calls vcd_write_change automatically
+    // this way Z participates fully in delta cycle ordering like a real circuit output should
+    // for now the demo works and waveform is correct so moving on
+     Z->value = X->value & Y->value;
+    vcd_write_change(*Z, current_time);
     printf("AND: X=%d Y=%d Z=%d\n", X->value, Y->value, X->value & Y->value);
 }
 
@@ -58,6 +78,8 @@ void dff_logic(void) {
        && CLK->last_change_on == current_time
        && CLK->last_change_delta == delta) {
         Q->value = D->value;
+        //Tempoary fix added to resolve it for now
+        vcd_write_change(*Q, current_time);
         printf("DFF triggered: D=%d Q=%d at t=%f d=%d\n", 
                D->value, Q->value, current_time, delta);
     }
@@ -274,7 +296,10 @@ int main()
 
     Scheduler adding_sch= scheduler_init();
     scheduler_add_process(&adding_sch, adding);
+    vcd_init("output-AND.vcd");
+    vcd_write_header(&Adder_sig);  // or &Dflipflop for dff test
     run_simulation(&Adder, &adding_sch, &Adder_sig);
+    vcd_close();
     //--------------ADDER SIMULATION ENDS HERE-------------------
 
     //--------------D Flipflop --------------------------------
@@ -343,7 +368,10 @@ int main()
         printf("  t=%f d=%d sig=%s val=%d\n", 
                Change.data[i].time, Change.data[i].delta,
                Change.data[i].signal_name, Change.data[i].new_value);
+    vcd_init("output-DFF.vcd");
+    vcd_write_header(&Dflipflop);  // or &Dflipflop for dff test
     run_simulation(&Change, &Update, &Dflipflop);
+    vcd_close();
     //---------------------------------------------------------
     return 0;
 }

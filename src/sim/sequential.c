@@ -10,6 +10,7 @@
 #include "sequential.h"
 #include "../core/scheduler.h"
 #include "../core/delta.h"
+#include "../output/vcd.h"
 // #include "scheduler.c"
 
 void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
@@ -33,7 +34,10 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
                 signal->data[i].value= e.new_value;
                 signal->data[i].last_change_delta = delta; 
                 signal->data[i].last_change_on = current_time;
-
+                    
+                // CHIRAG 17-03-26 : will add VCD Change here 
+                // vcd_write_change();
+                vcd_write_change(signal->data[i], current_time);
                 scheduler_notify(sch, signal->data[i]);
                 changed=1;
                 }

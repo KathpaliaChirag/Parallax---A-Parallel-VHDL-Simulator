@@ -95,7 +95,23 @@ VCD is a standard waveform format. GTKWave can read it. this is how we visualize
 - read VCD format spec, its simple
 - write vcd.h/c — open file, write header, write signal changes
 - done when: GTKWave opens the file without errors
-
+![AND GATE MANUAL](image.png)
+![DFF MANUAL](image-1.png)
+// CHIRAG 17-03-26 :: okay so Z output of AND gate was not showing in waveform.... stayed 0 always
+// reason was adder() was computing X&Y and printing it but never actually updating Z->value
+// and since vcd_write_change only gets called from sequential.c when an event updates a signal
+// Z never had an event.... so VCD never recorded any Z change.... flatline on GTKWave
+//
+// TEMPORARY FIX : directly set Z->value = X->value & Y->value inside adder()
+// and manually call vcd_write_change(*Z, current_time) from there
+// this works for the demo but bypasses the event system entirely
+// Z update is not going through the queue.... no event, no delta ordering for Z
+//
+// PROPER FIX FOR LATER : adder() should insert a new Z event into the queue
+// same pattern as dff_logic.... need a global adder_queue pointer
+// then sequential.c picks it up, updates Z properly, calls vcd_write_change automatically
+// this way Z participates fully in delta cycle ordering like a real circuit output should
+// for now the demo works and waveform is correct so moving on
 ### day 29 — trace hashing
 need a way to check that sequential and parallel produce identical output. hash the signal change sequence.
 
