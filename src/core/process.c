@@ -9,6 +9,7 @@
 #include<stdio.h>
 #include "process.h"
 #include "signal.h"
+#include <stdlib.h>
 static int id_counter =0;
 Process process_init(char *name, void (*run)(void))
 {

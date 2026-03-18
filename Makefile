@@ -4,7 +4,7 @@
 
 CC = gcc
 CFLAGS = -Wall -g
-
+CORE = $(SRC)/core
 SRC = src
 PARSER = $(SRC)/parser
 TESTS = tests/circuit/basic
@@ -15,11 +15,18 @@ all: sim parser
 sim: main.c
 	$(CC) $(CFLAGS) main.c -o main.exe
 
-parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast.h
+parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast_walker.c
 	bison -d $(PARSER)/parser.y -o $(PARSER)/parser.c
 	flex -o $(PARSER)/lexer.c $(PARSER)/lexer.l
-# 	$(CC) $(CFLAGS) $(PARSER)/parser.c $(PARSER)/lexer.c $(PARSER)/ast.c -o parser_test.exe
-	$(CC) $(CFLAGS) $(PARSER)/parser.c $(PARSER)/lexer.c $(PARSER)/ast.c $(PARSER)/ast_walker.c -o parser_test.exe
+	$(CC) $(CFLAGS) \
+		$(PARSER)/parser.c \
+		$(PARSER)/lexer.c \
+		$(PARSER)/ast.c \
+		$(PARSER)/ast_walker.c \
+		$(CORE)/signal.c \
+		$(CORE)/process.c \
+		$(CORE)/scheduler.c \
+		-o parser_test.exe
 
 test: parser
 	./parser_test.exe < $(TESTS)/and_gate.vhdl

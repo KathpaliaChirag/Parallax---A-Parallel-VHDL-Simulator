@@ -22,4 +22,7 @@ typedef struct {
     DynArray_Signal senstivity_list;
     void (*run)(void);
 } Process;
+Process process_init(char* name, void (*run)(void));
+void process_add_signal(Process* p, Signal s);
+void process_print_signals(Process* p);
 #endif

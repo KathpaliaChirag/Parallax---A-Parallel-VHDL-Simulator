@@ -6,6 +6,7 @@
 #ifndef SIGNAL_H
 #define SIGNAL_H
 #include "utils.h"
+#include <stdlib.h>
 typedef struct
 {
 int value;
@@ -18,6 +19,10 @@ int prev_value; //CHIRAG -17-03-26 : 1:35 ::  was just thinking and realised tha
 char vcd_symbol; //CHIRAG : 17-03-26: 14:40 ::  every signal will have a symbol in the vcd file thus adding it to list
 } Signal;
 DYNARRAY_TYPE(Signal) //added here as a part of design choice CHIRAG-10-03-26 12:26
+Signal* init_signal(char* name);
+void update_signal(Signal* s, int val, double time);
+int get_signal_value(Signal* s);
+double get_signal_last_change(Signal* s);
 #endif
 //interestingly I also got to know that there is this unsaid convention in C to name your struct starting with a capital letter
 //it does not affect the code but helps to understand in a good code that 'Signal' is a type and not a name

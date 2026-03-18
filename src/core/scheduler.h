@@ -21,5 +21,7 @@ typedef struct
 {
 DynArray_Process process_ARRAY;
 } Scheduler;
-
+Scheduler scheduler_init();
+void scheduler_add_process(Scheduler* sch, Process p);
+void scheduler_notify(Scheduler* sch, Signal s);
 #endif

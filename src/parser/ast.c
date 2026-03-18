@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
-
+ASTNode* ast_entity = NULL;
 ASTNode* ast_root = NULL;
 // CHIRAG : create a new node.... just malloc and set type
 // calloc zeros out memory so all pointers start as NULL automatically
