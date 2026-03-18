@@ -12,6 +12,8 @@
 #include "../core/delta.h"
 #include "../output/vcd.h"
 // #include "scheduler.c"
+#include "../output/trace.h"
+#include "../output/trace.c"
 
 void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
 {
@@ -38,6 +40,7 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
                 // CHIRAG 17-03-26 : will add VCD Change here 
                 // vcd_write_change();
                 vcd_write_change(signal->data[i], current_time);
+                trace_record(signal->data[i], current_time);
                 scheduler_notify(sch, signal->data[i]);
                 changed=1;
                 }

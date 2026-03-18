@@ -27,6 +27,10 @@
 #include"./src/sim/sequential.c"
 #include"./src/output/vcd.h"
 #include"./src/output/vcd.c"
+// #include "../output/trace.h"
+// #include "../output/trace.c"
+#include "./src/output/trace.h"
+// #include "./src/output/trace.c"
 // #include"./src/sim/sequential.c"
 void my_run(void)
 {
@@ -370,8 +374,11 @@ int main()
                Change.data[i].signal_name, Change.data[i].new_value);
     vcd_init("output-DFF.vcd");
     vcd_write_header(&Dflipflop);  // or &Dflipflop for dff test
+    trace_init();
     run_simulation(&Change, &Update, &Dflipflop);
+    //CHIRAG : 18-03-26 : 20:35 :: trace calculation added after... run_simulation ...
     vcd_close();
+    printf("Trace hash: %u\n", trace_hash());
     //---------------------------------------------------------
     return 0;
 }
