@@ -89,6 +89,14 @@
 #include <string.h>
 // #include "ast.h"
 
+#include "ast_walker.h"
+#include "../core/scheduler.h"
+#include "../core/signal.h"
+#include "../core/utils.h"
+#include "../core/scheduler.c"
+#include "../core/signal.c"
+#include "../core/process.c"
+
 // ASTNode* ast_root = NULL;  // will hold the final parsed tree
 
 void yyerror(const char* s);
@@ -99,7 +107,7 @@ extern struct ASTNode* ast_root;
 // forward declare so yyparse can use it
 // actual definition is in ast.c
 
-#line 103 "src/parser/parser.c"
+#line 111 "src/parser/parser.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -559,9 +567,9 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    74,    74,    86,    98,   100,   106,   113,   125,   127,
-     134,   145,   147,   154,   165,   167,   173,   175,   181,   193,
-     204,   205,   210,   216,   223,   230,   236
+       0,    82,    82,    94,   106,   108,   114,   121,   133,   135,
+     142,   153,   155,   162,   173,   175,   181,   183,   189,   201,
+     212,   213,   218,   224,   231,   238,   244
 };
 #endif
 
@@ -1167,215 +1175,215 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: entity_decl architecture_decl  */
-#line 75 "src/parser/parser.y"
+#line 83 "src/parser/parser.y"
         {
             // store entity in arch and set as root
             (yyval.node) = (yyvsp[0].node);
             ast_root = (yyval.node);
             ast_print(ast_root, 0);
         }
-#line 1178 "src/parser/parser.c"
+#line 1186 "src/parser/parser.c"
     break;
 
   case 3: /* entity_decl: ENTITY IDENTIFIER IS PORT '(' port_list ')' ';' END_TOK IDENTIFIER ';'  */
-#line 87 "src/parser/parser.y"
+#line 95 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_ENTITY);
             (yyval.node)->data.entity.name = strdup((yyvsp[-9].str));
             // port_list is stored globally for now.... will wire up properly
             printf("parsed entity: %s\n", (yyvsp[-9].str));
         }
-#line 1189 "src/parser/parser.c"
+#line 1197 "src/parser/parser.c"
     break;
 
   case 4: /* port_list: port_item  */
-#line 99 "src/parser/parser.y"
+#line 107 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1195 "src/parser/parser.c"
+#line 1203 "src/parser/parser.c"
     break;
 
   case 5: /* port_list: port_list ';' port_item  */
-#line 101 "src/parser/parser.y"
+#line 109 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1201 "src/parser/parser.c"
+#line 1209 "src/parser/parser.c"
     break;
 
   case 6: /* port_item: identifier_list ':' IN_TOK BIT  */
-#line 107 "src/parser/parser.y"
+#line 115 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_PORT);
             (yyval.node)->data.port.name = strdup((yyvsp[-3].str));
             (yyval.node)->data.port.direction = DIR_IN;
             printf("parsed input port: %s\n", (yyvsp[-3].str));
         }
-#line 1212 "src/parser/parser.c"
+#line 1220 "src/parser/parser.c"
     break;
 
   case 7: /* port_item: identifier_list ':' OUT_TOK BIT  */
-#line 114 "src/parser/parser.y"
+#line 122 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_PORT);
             (yyval.node)->data.port.name = strdup((yyvsp[-3].str));
             (yyval.node)->data.port.direction = DIR_OUT;
             printf("parsed output port: %s\n", (yyvsp[-3].str));
         }
-#line 1223 "src/parser/parser.c"
+#line 1231 "src/parser/parser.c"
     break;
 
   case 8: /* identifier_list: IDENTIFIER  */
-#line 126 "src/parser/parser.y"
+#line 134 "src/parser/parser.y"
         { (yyval.str) = (yyvsp[0].str); }
-#line 1229 "src/parser/parser.c"
+#line 1237 "src/parser/parser.c"
     break;
 
   case 9: /* identifier_list: identifier_list ',' IDENTIFIER  */
-#line 128 "src/parser/parser.y"
+#line 136 "src/parser/parser.y"
         { (yyval.str) = (yyvsp[-2].str); }
-#line 1235 "src/parser/parser.c"
+#line 1243 "src/parser/parser.c"
     break;
 
   case 10: /* architecture_decl: ARCHITECTURE IDENTIFIER OF IDENTIFIER IS BEGIN_TOK process_list END_TOK IDENTIFIER ';'  */
-#line 135 "src/parser/parser.y"
+#line 143 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_ARCH);
             (yyval.node)->data.arch.name = strdup((yyvsp[-8].str));
             (yyval.node)->data.arch.entity_name = strdup((yyvsp[-6].str));
             printf("parsed architecture: %s of %s\n", (yyvsp[-8].str), (yyvsp[-6].str));
         }
-#line 1246 "src/parser/parser.c"
+#line 1254 "src/parser/parser.c"
     break;
 
   case 11: /* process_list: process_decl  */
-#line 146 "src/parser/parser.y"
+#line 154 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1252 "src/parser/parser.c"
+#line 1260 "src/parser/parser.c"
     break;
 
   case 12: /* process_list: process_list process_decl  */
-#line 148 "src/parser/parser.y"
+#line 156 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1258 "src/parser/parser.c"
+#line 1266 "src/parser/parser.c"
     break;
 
   case 13: /* process_decl: PROCESS '(' identifier_list ')' BEGIN_TOK statement_list END_TOK PROCESS ';'  */
-#line 155 "src/parser/parser.y"
+#line 163 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_PROCESS);
             (yyval.node)->data.process.sensitivity[0] = strdup((yyvsp[-6].str));
             (yyval.node)->data.process.sensitivity_count = 1;
             printf("parsed process with sensitivity: %s\n", (yyvsp[-6].str));
         }
-#line 1269 "src/parser/parser.c"
+#line 1277 "src/parser/parser.c"
     break;
 
   case 14: /* statement_list: statement  */
-#line 166 "src/parser/parser.y"
+#line 174 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1275 "src/parser/parser.c"
+#line 1283 "src/parser/parser.c"
     break;
 
   case 15: /* statement_list: statement_list statement  */
-#line 168 "src/parser/parser.y"
+#line 176 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1281 "src/parser/parser.c"
+#line 1289 "src/parser/parser.c"
     break;
 
   case 16: /* statement: signal_assignment  */
-#line 174 "src/parser/parser.y"
+#line 182 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1287 "src/parser/parser.c"
+#line 1295 "src/parser/parser.c"
     break;
 
   case 17: /* statement: if_statement  */
-#line 176 "src/parser/parser.y"
+#line 184 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1293 "src/parser/parser.c"
+#line 1301 "src/parser/parser.c"
     break;
 
   case 18: /* signal_assignment: IDENTIFIER ASSIGN expression ';'  */
-#line 182 "src/parser/parser.y"
+#line 190 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_ASSIGN);
             (yyval.node)->data.assign.target = strdup((yyvsp[-3].str));
             (yyval.node)->data.assign.expr = (yyvsp[-1].node);
             printf("parsed assignment: %s <=\n", (yyvsp[-3].str));
         }
-#line 1304 "src/parser/parser.c"
+#line 1312 "src/parser/parser.c"
     break;
 
   case 19: /* if_statement: IF IDENTIFIER '=' bit_literal THEN statement_list END_TOK IF ';'  */
-#line 194 "src/parser/parser.y"
+#line 202 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_IF);
             (yyval.node)->data.if_stmt.signal_name = strdup((yyvsp[-7].str));
             (yyval.node)->data.if_stmt.bit_value = (yyvsp[-5].num);
             printf("parsed if: %s = '%d'\n", (yyvsp[-7].str), (yyvsp[-5].num));
         }
-#line 1315 "src/parser/parser.c"
+#line 1323 "src/parser/parser.c"
     break;
 
   case 20: /* bit_literal: ZERO  */
-#line 204 "src/parser/parser.y"
+#line 212 "src/parser/parser.y"
             { (yyval.num) = 0; }
-#line 1321 "src/parser/parser.c"
+#line 1329 "src/parser/parser.c"
     break;
 
   case 21: /* bit_literal: ONE  */
-#line 205 "src/parser/parser.y"
+#line 213 "src/parser/parser.y"
             { (yyval.num) = 1; }
-#line 1327 "src/parser/parser.c"
+#line 1335 "src/parser/parser.c"
     break;
 
   case 22: /* expression: IDENTIFIER  */
-#line 211 "src/parser/parser.y"
+#line 219 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_IDENTIFIER;
             (yyval.node)->data.expr.identifier = strdup((yyvsp[0].str));
         }
-#line 1337 "src/parser/parser.c"
+#line 1345 "src/parser/parser.c"
     break;
 
   case 23: /* expression: expression AND_TOK expression  */
-#line 217 "src/parser/parser.y"
+#line 225 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_AND;
             (yyval.node)->data.expr.left = (yyvsp[-2].node);
             (yyval.node)->data.expr.right = (yyvsp[0].node);
         }
-#line 1348 "src/parser/parser.c"
+#line 1356 "src/parser/parser.c"
     break;
 
   case 24: /* expression: expression OR_TOK expression  */
-#line 224 "src/parser/parser.y"
+#line 232 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_OR;
             (yyval.node)->data.expr.left = (yyvsp[-2].node);
             (yyval.node)->data.expr.right = (yyvsp[0].node);
         }
-#line 1359 "src/parser/parser.c"
+#line 1367 "src/parser/parser.c"
     break;
 
   case 25: /* expression: NOT_TOK expression  */
-#line 231 "src/parser/parser.y"
+#line 239 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_NOT;
             (yyval.node)->data.expr.left = (yyvsp[0].node);
         }
-#line 1369 "src/parser/parser.c"
+#line 1377 "src/parser/parser.c"
     break;
 
   case 26: /* expression: '(' expression ')'  */
-#line 237 "src/parser/parser.y"
+#line 245 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[-1].node); }
-#line 1375 "src/parser/parser.c"
+#line 1383 "src/parser/parser.c"
     break;
 
 
-#line 1379 "src/parser/parser.c"
+#line 1387 "src/parser/parser.c"
 
       default: break;
     }
@@ -1568,7 +1576,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 240 "src/parser/parser.y"
+#line 248 "src/parser/parser.y"
 
 
 // CHIRAG : bison calls this on syntax error
@@ -1576,6 +1584,36 @@ void yyerror(const char* s)
 {
     fprintf(stderr, "parse error: %s\n", s);
 }
-int main() {
-    return yyparse();
+// int main() {
+//     return yyparse();
+// }
+int main()
+{
+    // CHIRAG 19-03-26 :: this is the full pipeline
+    // parse VHDL → build AST → walk AST → run simulation
+    
+    // step 1: parse the VHDL file from stdin
+    // yyparse reads from stdin by default.... we pipe the vhdl file in
+    int result = yyparse();
+    if(result != 0)
+    {
+        printf("parsing failed\n");
+        return 1;
+    }
+    printf("parsing done! walking AST now...\n");
+
+    // step 2: create empty signals array and scheduler
+    DynArray_Signal signals;
+    DYNARRAY_INIT(signals)
+    Scheduler sch = scheduler_init();
+
+    // step 3: walk AST.... creates signals and processes automatically
+    ast_walk(ast_root, &signals, &sch);
+    printf("AST walk done! %d signals created\n", signals.size);
+
+    // step 4: print what we created
+    for(int i = 0; i < signals.size; i++)
+        printf("signal: %s\n", signals.data[i].name);
+
+    return 0;
 }

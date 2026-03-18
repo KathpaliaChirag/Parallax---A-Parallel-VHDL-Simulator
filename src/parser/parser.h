@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 33 "src/parser/parser.y"
+#line 41 "src/parser/parser.y"
 
     #include "ast.h"
 
@@ -89,7 +89,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 38 "src/parser/parser.y"
+#line 46 "src/parser/parser.y"
 
     char* str;      // for identifiers
     int num;        // for bit literals

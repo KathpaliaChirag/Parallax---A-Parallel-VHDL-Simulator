@@ -19,6 +19,14 @@
 #include <string.h>
 // #include "ast.h"
 
+#include "ast_walker.h"
+#include "../core/scheduler.h"
+#include "../core/signal.h"
+#include "../core/utils.h"
+#include "../core/scheduler.c"
+#include "../core/signal.c"
+#include "../core/process.c"
+
 // ASTNode* ast_root = NULL;  // will hold the final parsed tree
 
 void yyerror(const char* s);
@@ -244,6 +252,36 @@ void yyerror(const char* s)
 {
     fprintf(stderr, "parse error: %s\n", s);
 }
-int main() {
-    return yyparse();
+// int main() {
+//     return yyparse();
+// }
+int main()
+{
+    // CHIRAG 19-03-26 :: this is the full pipeline
+    // parse VHDL → build AST → walk AST → run simulation
+    
+    // step 1: parse the VHDL file from stdin
+    // yyparse reads from stdin by default.... we pipe the vhdl file in
+    int result = yyparse();
+    if(result != 0)
+    {
+        printf("parsing failed\n");
+        return 1;
+    }
+    printf("parsing done! walking AST now...\n");
+
+    // step 2: create empty signals array and scheduler
+    DynArray_Signal signals;
+    DYNARRAY_INIT(signals)
+    Scheduler sch = scheduler_init();
+
+    // step 3: walk AST.... creates signals and processes automatically
+    ast_walk(ast_root, &signals, &sch);
+    printf("AST walk done! %d signals created\n", signals.size);
+
+    // step 4: print what we created
+    for(int i = 0; i < signals.size; i++)
+        printf("signal: %s\n", signals.data[i].name);
+
+    return 0;
 }

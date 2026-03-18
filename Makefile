@@ -18,7 +18,8 @@ sim: main.c
 parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast.h
 	bison -d $(PARSER)/parser.y -o $(PARSER)/parser.c
 	flex -o $(PARSER)/lexer.c $(PARSER)/lexer.l
-	$(CC) $(CFLAGS) $(PARSER)/parser.c $(PARSER)/lexer.c $(PARSER)/ast.c -o parser_test.exe
+# 	$(CC) $(CFLAGS) $(PARSER)/parser.c $(PARSER)/lexer.c $(PARSER)/ast.c -o parser_test.exe
+	$(CC) $(CFLAGS) $(PARSER)/parser.c $(PARSER)/lexer.c $(PARSER)/ast.c $(PARSER)/ast_walker.c -o parser_test.exe
 
 test: parser
 	./parser_test.exe < $(TESTS)/and_gate.vhdl
