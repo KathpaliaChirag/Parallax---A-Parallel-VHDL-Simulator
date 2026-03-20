@@ -36,8 +36,11 @@ parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast_walke
 		-o parser_test.exe
 
 test: parser
-	./parser_test.exe < $(TESTS)/and_gate.vhdl
+	./parser_test.exe and-gate < tests/circuit/basic/and_gate.vhdl
 
+test_or: parser
+	./parser_test.exe or-gate < tests/circuit/basic/or_gate.vhdl
+	
 run: sim
 	./main.exe
 

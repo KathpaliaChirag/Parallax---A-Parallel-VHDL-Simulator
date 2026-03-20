@@ -242,7 +242,7 @@ void yyerror(const char* s)
     fprintf(stderr, "parse error: %s\n", s);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     int result = yyparse();
     if(result != 0) { printf("parsing failed\n"); return 1; }
@@ -266,7 +266,21 @@ int main()
     e.signal_name = "B"; e.new_value = 0; e.time = 0; insert_ele(&eq, e);
     e.signal_name = "A"; e.new_value = 1; e.time = 1; insert_ele(&eq, e);
     e.signal_name = "B"; e.new_value = 1; e.time = 2; insert_ele(&eq, e);
-     vcd_init("output-parser.vcd");
+    e.signal_name = "A"; e.new_value = 0; e.time = 3; insert_ele(&eq, e);
+    e.signal_name = "B"; e.new_value = 0; e.time = 4; insert_ele(&eq, e);
+    e.signal_name = "A"; e.new_value = 1; e.time = 5; insert_ele(&eq, e);
+    e.signal_name = "B"; e.new_value = 0; e.time = 7; insert_ele(&eq, e);
+    e.signal_name = "A"; e.new_value = 1; e.time = 9; insert_ele(&eq, e);
+    e.signal_name = "B"; e.new_value = 1; e.time = 9; insert_ele(&eq, e);
+
+    // CHIRAG : vcd filename from command line arg.... default to output-parser.vcd
+    char vcd_name[64];
+    if(argc > 1)
+        snprintf(vcd_name, 64, "output-%s.vcd", argv[1]);
+    else
+        snprintf(vcd_name, 64, "output-parser.vcd");
+
+    vcd_init(vcd_name);
     vcd_write_header(&signals);
     init_run();
     run_simulation(&eq, &sch, &signals);
