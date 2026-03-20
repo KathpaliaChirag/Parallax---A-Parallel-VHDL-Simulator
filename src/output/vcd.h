@@ -2,6 +2,8 @@
 #define VCD_H
 #include <stdio.h>
 #include "signal.h"
+#include "../core/signal.h"
+#include "../core/utils.h"
 
 extern FILE* vcd_file; 
 void vcd_init(char* filename); // make a file with some name which we can open and write into

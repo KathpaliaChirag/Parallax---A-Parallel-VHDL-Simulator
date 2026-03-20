@@ -15,4 +15,7 @@
 
 DYNARRAY_TYPE(Event) //semicol not needed here as it litrally expands to ; in end 
 typedef DynArray_Event EventQueue; //this line helps in aliasing
+EventQueue init_queue(void);
+void insert_ele(EventQueue* q, Event e);
+Event extract_min(EventQueue* q);
 #endif

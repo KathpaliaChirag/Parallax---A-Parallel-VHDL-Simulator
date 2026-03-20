@@ -23,6 +23,9 @@
 // #include "../core/signal.c"
 // #include "../core/process.c"
 // #include "../core/scheduler.c"
+#include "../core/event.h"
+#include "../core/event_queue.h"
+#include "../core/delta.h"
 
 // CHIRAG : forward declaration.... walk_node calls itself recursively
 static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch);
@@ -37,13 +40,94 @@ static Signal* find_signal(DynArray_Signal* signals, char* name)
     return NULL;
 }
 
+//20-03-26 : 18:40 :: -----------------------------------------------------------------------
+// CHIRAG : context for each process.... stores what it needs to run
+// since run() has no params, context lives globally
+#define MAX_PROC_CONTEXTS 8
+
+typedef struct {
+    char target_name[64];
+    ASTNode* expr;
+    DynArray_Signal* signals;
+} ProcessContext;
+
+static ProcessContext proc_contexts[MAX_PROC_CONTEXTS];
+static int proc_context_count = 0;
+
+// CHIRAG : set this before calling run_simulation
+// process run functions insert events into this queue
+EventQueue* walker_queue = NULL;
+
+// CHIRAG : walk an expression AST node and compute the result
+// reads current signal values from the signals array
+static int eval_expr(ASTNode* expr, DynArray_Signal* signals)
+{
+    if(expr == NULL) return 0;
+    switch(expr->data.expr.expr_type)
+    {
+        case EXPR_IDENTIFIER:
+        {
+            Signal* s = find_signal(signals, expr->data.expr.identifier);
+            return s ? s->value : 0;
+        }
+        case EXPR_AND:
+            return eval_expr(expr->data.expr.left, signals)
+                 & eval_expr(expr->data.expr.right, signals);
+        case EXPR_OR:
+            return eval_expr(expr->data.expr.left, signals)
+                 | eval_expr(expr->data.expr.right, signals);
+        case EXPR_NOT:
+            return !eval_expr(expr->data.expr.left, signals);
+        case EXPR_BIT_LITERAL:
+            return expr->data.expr.bit_value;
+        default: return 0;
+    }
+}
+
+// CHIRAG : generic run logic.... called by each slot function below
+// evaluates expression, finds target signal, inserts output event
+static void run_proc_generic(int idx)
+{
+    ProcessContext* ctx = &proc_contexts[idx];
+    if(walker_queue == NULL) return;
+
+    Signal* target = find_signal(ctx->signals, ctx->target_name);
+    if(target == NULL) return;
+
+    int result = eval_expr(ctx->expr, ctx->signals);
+
+    // CHIRAG : only schedule event if value actually changes
+    // without this check.... Y<=0 schedules itself forever
+    if(result == target->value) return;
+
+    Event e;
+    e.signal_name = target->name;
+    e.new_value   = result;
+    e.time        = current_time;
+    e.delta       = delta + 1;
+    e.type        = 0;
+    insert_ele(walker_queue, e);
+    printf("eval: %s <= %d at t=%.1f d=%d\n",
+        ctx->target_name, result, current_time, delta + 1);
+}
+// CHIRAG : one function per process slot.... C has no closures so this is the pattern
+static void run_proc_0(void) { run_proc_generic(0); }
+static void run_proc_1(void) { run_proc_generic(1); }
+static void run_proc_2(void) { run_proc_generic(2); }
+static void run_proc_3(void) { run_proc_generic(3); }
+
+static void (*proc_run_funcs[MAX_PROC_CONTEXTS])(void) = {
+    run_proc_0, run_proc_1, run_proc_2, run_proc_3
+};
+
 // CHIRAG : dummy run function for now.... 
 // later this will be replaced by expression evaluator
 // for now just prints that process ran
-static void dummy_run(void)
-{
-    printf("process ran\n");
-}
+//----------------------------------------------------------------------------------------------
+// static void dummy_run(void)
+// {
+//     printf("process ran\n");
+// }
 
 // CHIRAG : main entry point.... called from main after parsing
 // root is the top of the AST.... usually NODE_ARCH
@@ -86,37 +170,81 @@ static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch)
                 walk_node(node->data.arch.processes[i], signals, sch);
             break;
 
-        // CHIRAG : process node.... create Process struct
-        // add signals from sensitivity list to it
-        // add process to scheduler
+        //-----------------------------------------------------------------------------------
+            // CHIRAG : process node.... create Process struct
+        // // add signals from sensitivity list to it
+        // // add process to scheduler
+        // case NODE_PROCESS:
+        //     {
+        //         printf("walker: creating process with %d sensitivity signals\n",
+        //             node->data.process.sensitivity_count);
+
+        //         // create process with dummy run function for now
+        //         Process p = process_init("vhdl_process", dummy_run);
+
+        //         // add each sensitivity signal to the process
+        //         for(int i = 0; i < node->data.process.sensitivity_count; i++)
+        //         {
+        //             char* sig_name = node->data.process.sensitivity[i];
+        //             Signal* s = find_signal(signals, sig_name);
+        //             if(s != NULL)
+        //             {
+        //                 process_add_signal(&p, *s);
+        //                 printf("walker: process watches signal %s\n", sig_name);
+        //             }
+        //             else
+        //                 printf("walker: WARNING signal %s not found\n", sig_name);
+        //         }
+
+        //         // add process to scheduler
+        //         scheduler_add_process(sch, p);
+        //         printf("walker: process added to scheduler\n");
+        //     }
+        //     break;
         case NODE_PROCESS:
+        {
+            printf("walker: creating process with %d sensitivity signals\n",
+                node->data.process.sensitivity_count);
+            
+            // CHIRAG : find the assignment statement inside this process
+            // store target + expr in context so run_proc_N can use them
+            int ctx_idx = proc_context_count;
+            ProcessContext* ctx = &proc_contexts[ctx_idx];
+            ctx->signals = signals;
+            
+            for(int i = 0; i < node->data.process.statement_count; i++)
             {
-                printf("walker: creating process with %d sensitivity signals\n",
-                    node->data.process.sensitivity_count);
-
-                // create process with dummy run function for now
-                Process p = process_init("vhdl_process", dummy_run);
-
-                // add each sensitivity signal to the process
-                for(int i = 0; i < node->data.process.sensitivity_count; i++)
+                ASTNode* stmt = node->data.process.statements[i];
+                if(stmt && stmt->type == NODE_ASSIGN)
                 {
-                    char* sig_name = node->data.process.sensitivity[i];
-                    Signal* s = find_signal(signals, sig_name);
-                    if(s != NULL)
-                    {
-                        process_add_signal(&p, *s);
-                        printf("walker: process watches signal %s\n", sig_name);
-                    }
-                    else
-                        printf("walker: WARNING signal %s not found\n", sig_name);
+                    strncpy(ctx->target_name, stmt->data.assign.target, 63);
+                    ctx->expr = stmt->data.assign.expr;
+                    printf("walker: process computes %s <=\n", ctx->target_name);
+                    break;
                 }
-
-                // add process to scheduler
-                scheduler_add_process(sch, p);
-                printf("walker: process added to scheduler\n");
             }
-            break;
-
+        
+            Process p = process_init("vhdl_process", proc_run_funcs[ctx_idx]);
+            proc_context_count++;
+        
+            for(int i = 0; i < node->data.process.sensitivity_count; i++)
+            {
+                char* sig_name = node->data.process.sensitivity[i];
+                Signal* s = find_signal(signals, sig_name);
+                if(s != NULL)
+                {
+                    process_add_signal(&p, *s);
+                    printf("walker: process watches signal %s\n", sig_name);
+                }
+                else
+                    printf("walker: WARNING signal %s not found\n", sig_name);
+            }
+        
+            scheduler_add_process(sch, p);
+            printf("walker: process added to scheduler\n");
+        }
+        break;
+//----------------------------------------------------------------------------------------------
         // CHIRAG : assignment node.... for now just print
         // later this will set up the process run function properly
         case NODE_ASSIGN:

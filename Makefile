@@ -4,9 +4,11 @@
 
 CC = gcc
 CFLAGS = -Wall -g
-CORE = $(SRC)/core
 SRC = src
+CORE = $(SRC)/core
+SIM = $(SRC)/sim
 PARSER = $(SRC)/parser
+OUTPUT = $(SRC)/output
 TESTS = tests/circuit/basic
 
 all: sim parser
@@ -26,6 +28,11 @@ parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast_walke
 		$(CORE)/signal.c \
 		$(CORE)/process.c \
 		$(CORE)/scheduler.c \
+		$(CORE)/event_queue.c \
+		$(CORE)/delta.c \
+		$(SIM)/sequential.c \
+		$(OUTPUT)/vcd.c \
+		$(OUTPUT)/trace.c \
 		-o parser_test.exe
 
 test: parser

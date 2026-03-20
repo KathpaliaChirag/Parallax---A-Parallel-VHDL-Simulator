@@ -13,7 +13,8 @@
 #include "../output/vcd.h"
 // #include "scheduler.c"
 #include "../output/trace.h"
-#include "../output/trace.c"
+// #include "../output/trace.c"/
+#include <string.h>
 
 void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
 {

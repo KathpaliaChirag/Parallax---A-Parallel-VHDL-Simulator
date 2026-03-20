@@ -6,6 +6,13 @@
 #include "../core/scheduler.h"
 #include "../core/signal.h"
 #include "../core/utils.h"
+#include "../output/vcd.h"
+
+#include "../core/event.h"
+#include "../sim/sequential.h"
+#include "../core/delta.h"
+#include "../core/event_queue.h"
+extern EventQueue* walker_queue;
 
 void yyerror(const char* s);
 int yylex();
@@ -18,9 +25,13 @@ extern struct ASTNode* ast_entity;
 // ports and processes are collected here as they are parsed
 // then copied into the entity/arch node when that rule completes
 ASTNode* temp_ports[32];
+ASTNode* temp_stmts[32];
+int temp_stmt_count = 0;
 int temp_port_count = 0;
 ASTNode* temp_processes[32];
 int temp_process_count = 0;
+char* temp_sens[32];
+int temp_sens_count = 0;
 %}
 
 %code requires {
@@ -91,8 +102,8 @@ port_item
             $$ = ast_new_node(NODE_PORT);
             $$->data.port.name = strdup($1);
             $$->data.port.direction = DIR_IN;
-            // CHIRAG : add to temp ports array
             temp_ports[temp_port_count++] = $$;
+            temp_sens_count = 0;  // ← add this
             printf("parsed input port: %s\n", $1);
         }
     | identifier_list ':' OUT_TOK BIT
@@ -100,17 +111,17 @@ port_item
             $$ = ast_new_node(NODE_PORT);
             $$->data.port.name = strdup($1);
             $$->data.port.direction = DIR_OUT;
-            // CHIRAG : add to temp ports array
             temp_ports[temp_port_count++] = $$;
+            temp_sens_count = 0;  // ← add this
             printf("parsed output port: %s\n", $1);
         }
     ;
 
 identifier_list
     : IDENTIFIER
-        { $$ = $1; }
+        { $$ = $1; temp_sens[temp_sens_count++] = strdup($1); }
     | identifier_list ',' IDENTIFIER
-        { $$ = $1; }
+        { $$ = $1; temp_sens[temp_sens_count++] = strdup($3); }
     ;
 
 architecture_decl
@@ -139,11 +150,18 @@ process_decl
     : PROCESS '(' identifier_list ')' BEGIN_TOK statement_list END_TOK PROCESS ';'
         {
             $$ = ast_new_node(NODE_PROCESS);
-            $$->data.process.sensitivity[0] = strdup($3);
-            $$->data.process.sensitivity_count = 1;
-            // CHIRAG : add to temp processes array
+            // CHIRAG : copy all sensitivity signals, not just first one
+            for(int i = 0; i < temp_sens_count; i++)
+                $$->data.process.sensitivity[i] = temp_sens[i];
+            $$->data.process.sensitivity_count = temp_sens_count;
+            temp_sens_count = 0;
+            for(int i = 0; i < temp_stmt_count; i++)
+                $$->data.process.statements[i] = temp_stmts[i];
+            $$->data.process.statement_count = temp_stmt_count;
+            temp_stmt_count = 0;
             temp_processes[temp_process_count++] = $$;
-            printf("parsed process with sensitivity: %s\n", $3);
+            printf("parsed process with sensitivity: %d signals, statements: %d\n",
+                $$->data.process.sensitivity_count, $$->data.process.statement_count);
         }
     ;
 
@@ -156,9 +174,9 @@ statement_list
 
 statement
     : signal_assignment
-        { $$ = $1; }
+        { $$ = $1; temp_stmts[temp_stmt_count++] = $1; }
     | if_statement
-        { $$ = $1; }
+        { $$ = $1; temp_stmts[temp_stmt_count++] = $1; }
     ;
 
 signal_assignment
@@ -226,25 +244,36 @@ void yyerror(const char* s)
 
 int main()
 {
-    
     int result = yyparse();
-    if(result != 0)
-    {
-        printf("parsing failed\n");
-        return 1;
-    }
+    if(result != 0) { printf("parsing failed\n"); return 1; }
     printf("parsing done! walking AST now...\n");
 
     DynArray_Signal signals;
     DYNARRAY_INIT(signals)
     Scheduler sch = scheduler_init();
 
+    ast_walk(ast_entity, &signals, &sch);
     ast_walk(ast_root, &signals, &sch);
     printf("AST walk done! %d signals created\n", signals.size);
-    ast_walk(ast_root, &signals, &sch);
 
+    EventQueue eq = init_queue();
+    walker_queue = &eq;
+
+    Event e;
+    e.type = 0; e.delta = 0;
+
+    e.signal_name = "A"; e.new_value = 0; e.time = 0; insert_ele(&eq, e);
+    e.signal_name = "B"; e.new_value = 0; e.time = 0; insert_ele(&eq, e);
+    e.signal_name = "A"; e.new_value = 1; e.time = 1; insert_ele(&eq, e);
+    e.signal_name = "B"; e.new_value = 1; e.time = 2; insert_ele(&eq, e);
+     vcd_init("output-parser.vcd");
+    vcd_write_header(&signals);
+    init_run();
+    run_simulation(&eq, &sch, &signals);
+
+    printf("\nfinal signal values:\n");
     for(int i = 0; i < signals.size; i++)
-        printf("signal: %s\n", signals.data[i].name);
+        printf("  %s = %d\n", signals.data[i].name, signals.data[i].value);
 
     return 0;
 }

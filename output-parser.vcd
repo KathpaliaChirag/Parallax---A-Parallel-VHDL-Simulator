@@ -1,0 +1,19 @@
+$timescale 1ns $end
+$var wire 1 ! A $end
+$var wire 1 " B $end
+$var wire 1 # Y $end
+$dumpvars
+0!
+0"
+0#
+$end
+#0
+0!
+#0
+0"
+#1
+1!
+#2
+1"
+#2
+1#
