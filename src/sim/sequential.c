@@ -14,6 +14,7 @@
 // #include "scheduler.c"
 #include "../output/trace.h"
 // #include "../output/trace.c"/
+#include "../core/signal.h"
 #include <string.h>
 
 void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
@@ -33,8 +34,12 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
                 for(int i=0 ; i < signal->size; i++)
                 if(strcmp(signal->data[i].name, e.signal_name) == 0)
                 {
-                signal->data[i].prev_value = signal->data[i].value;
-                signal->data[i].value= e.new_value;
+                // CHIRAG 02-04-26 :: write to value_next not value directly
+                // processes will read frozen value during this delta
+                // value_next holds the pending update until delta boundary
+                // signal->data[i].prev_value = signal->data[i].value;
+                // signal->data[i].value= e.new_value;
+                signal->data[i].value_next= e.new_value;
                 signal->data[i].last_change_delta = delta; 
                 signal->data[i].last_change_on = current_time;
                     
@@ -42,11 +47,26 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
                 // vcd_write_change();
                 vcd_write_change(signal->data[i], current_time);
                 trace_record(signal->data[i], current_time);
-                scheduler_notify(sch, signal->data[i]);
+                // scheduler_notify(sch, signal->data[i]);
                 changed=1;
                 }
                 
             }
+            // CHIRAG 02-04-26 :: delta boundary sweep
+            // all processes have run for this delta, now apply pending writes
+            // value_next becomes value for every signal that changed
+            // CHIRAG 02-04-26 :: swap value_next into value BEFORE notifying processes
+            // so when processes run they see correct new value and correct prev_value
+            signal_apply_updates(signal);
+            // CHIRAG 02-04-26 :: notify AFTER swap — processes see stable correct state
+            for(int i=0; i < signal->size; i++)
+                if(signal->data[i].value != signal->data[i].prev_value)
+                {
+                    scheduler_notify(sch, signal->data[i]);
+                     // CHIRAG 02-04-26 :: reset prev_value after notify so next delta
+                     // doesn't re-notify for same change
+                     signal->data[i].prev_value = signal->data[i].value;
+                }
             if(changed)
             advance_delta();
             

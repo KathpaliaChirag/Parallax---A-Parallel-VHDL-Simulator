@@ -19,6 +19,7 @@ Signal* init_signal(char *n)
     s->last_change_delta= 0;
     s->type =0;
     s->prev_value = 0;
+    s->value_next =0;
     return s;
 }
 //as for update signla initial thought was time will come from the system
@@ -48,3 +49,22 @@ return s->last_change_on;
 // Pass by value (struct) → C copies the whole thing. Fine for tiny structs, wasteful for big ones. 
 // Also changes inside the function don't affect the original.
 // Pass by pointer (struct*) → no copy, just address. Changes inside affect the original.
+
+// CHIRAG 02-04-26 :: called at delta boundary in sequential.c
+// sweeps value_next into value for every signal that changed
+// this is the double buffer swap — after this all reads see the new stable state
+// returns count of signals that actually changed so sequential.c knows if another delta is needed
+int signal_apply_updates(DynArray_Signal* signals)
+{
+    int changed_count = 0;
+    for(int i = 0; i < signals->size; i++)
+    {
+        if(signals->data[i].value_next != signals->data[i].value)
+        {
+            signals->data[i].prev_value = signals->data[i].value;
+            signals->data[i].value = signals->data[i].value_next;
+            changed_count++;
+        }
+    }
+    return changed_count;
+}

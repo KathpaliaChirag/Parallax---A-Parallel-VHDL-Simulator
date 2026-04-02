@@ -18,7 +18,11 @@ void trace_record(Signal s, double time)
     signal_change sc;
     sc.signal_name =s.name;
     sc.time = time;
-    sc.value = s.value;
+    // sc.value = s.value; // was taking old value will fix now 
+    // CHIRAG 02-04-26 :: record value_next not value
+    // trace_record is called before signal_apply_updates swap
+    // so value still has old state, value_next has the correct new value
+    sc.value = s.value_next;
     DYNARRAY_INSERT(trace_log, sc);
 }
 
