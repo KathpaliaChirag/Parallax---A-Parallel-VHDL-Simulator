@@ -32,6 +32,8 @@
 #include "./src/output/trace.h"
 // #include "./src/output/trace.c"
 // #include"./src/sim/sequential.c"
+#include "./src/output/trace.h"
+#include "./src/output/trace.c"
 void my_run(void)
 {
     printf("\nHello world by CK-A\n");
@@ -47,7 +49,7 @@ void my_run2(void)
 
 Signal *X, *Y, *Z, *D, *Q, *CLK;
 EventQueue *dff_queue;
-void adder(void)
+void adder(int ctx_idx)
 {
     print_state();
     // printf("\n Sum is " (X->value&Y->value));
@@ -77,10 +79,11 @@ void adder(void)
 //     Q->value= D->value;
 // }
 
-void dff_logic(void) {
+void dff_logic(int ctx_idx) {
     if(CLK->prev_value == 0 && CLK->value == 1 
        && CLK->last_change_on == current_time
-       && CLK->last_change_delta == delta) {
+       && CLK->last_change_delta == delta) 
+       {
         Q->value = D->value;
         //Tempoary fix added to resolve it for now
         vcd_write_change(*Q, current_time);
@@ -294,7 +297,7 @@ int main()
     Y = &Adder_sig.data[1];
     Z = &Adder_sig.data[2];
 
-    Process adding = process_init("Input_add", adder);
+    Process adding = process_init("Input_add", adder, -1);
     process_add_signal(&adding, *X );
     process_add_signal(&adding, *Y );
 
@@ -302,8 +305,10 @@ int main()
     scheduler_add_process(&adding_sch, adding);
     vcd_init("output-AND.vcd");
     vcd_write_header(&Adder_sig);  // or &Dflipflop for dff test
+    trace_init();
     run_simulation(&Adder, &adding_sch, &Adder_sig);
     vcd_close();
+    printf("AND gate trace hash: %u\n", trace_hash());
     //--------------ADDER SIMULATION ENDS HERE-------------------
 
     //--------------D Flipflop --------------------------------
@@ -360,7 +365,8 @@ int main()
     Q   = &Dflipflop.data[1];
     CLK = &Dflipflop.data[2];
     
-    Process Dffs = process_init("Dff", dff_logic);
+    Process Dffs = process_init("Dff", dff_logic, -1);
+    //ctx is -1 bcz hardcoded functions do not use proc_contexts
     process_add_signal(&Dffs, *D);
     process_add_signal(&Dffs, *CLK);
     

@@ -19,10 +19,11 @@
 typedef struct {
     int id;
     char *name;
+    int ctx_idx; //CHIRAG 01-04-26 :: decided to fix it properly and added the int for process number 
     DynArray_Signal senstivity_list;
-    void (*run)(void);
+    void (*run)(int);
 } Process;
-Process process_init(char* name, void (*run)(void));
+Process process_init(char* name, void (*run)(int),int ctx_idx);
 void process_add_signal(Process* p, Signal s);
 void process_print_signals(Process* p);
 #endif

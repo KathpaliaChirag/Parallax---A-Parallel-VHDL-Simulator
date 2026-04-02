@@ -20,9 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast_walker.h"
-// #include "../core/signal.c"
-// #include "../core/process.c"
-// #include "../core/scheduler.c"
 #include "../core/event.h"
 #include "../core/event_queue.h"
 #include "../core/delta.h"
@@ -43,7 +40,9 @@ static Signal* find_signal(DynArray_Signal* signals, char* name)
 //20-03-26 : 18:40 :: -----------------------------------------------------------------------
 // CHIRAG : context for each process.... stores what it needs to run
 // since run() has no params, context lives globally
-#define MAX_PROC_CONTEXTS 8
+// CHIRAG 02-04-26 :: removed MAX_PROC_CONTEXTS fixed cap and proc_run_funcs[] slot array
+// now proc_contexts is a dynamic array that grows with realloc as processes are added
+// no cap, no slot functions needed anymore
 
 typedef struct {
     char target_name[64];
@@ -51,8 +50,9 @@ typedef struct {
     DynArray_Signal* signals;
 } ProcessContext;
 
-static ProcessContext proc_contexts[MAX_PROC_CONTEXTS];
+static ProcessContext* proc_contexts = NULL;
 static int proc_context_count = 0;
+static int proc_contexts_capacity = 0;
 
 // CHIRAG : set this before calling run_simulation
 // process run functions insert events into this queue
@@ -84,9 +84,12 @@ static int eval_expr(ASTNode* expr, DynArray_Signal* signals)
     }
 }
 
-// CHIRAG : generic run logic.... called by each slot function below
+// CHIRAG : generic run logic.... called directly by scheduler now via function pointer
 // evaluates expression, finds target signal, inserts output event
-static void run_proc_generic(int idx)
+// CHIRAG 02-04-26 :: this is now THE run function for every process
+// idx comes from p.ctx_idx which scheduler passes when calling p.run(p.ctx_idx)
+// no more one-function-per-slot pattern.... run_proc_generic handles all processes
+void run_proc_generic(int idx)
 {
     ProcessContext* ctx = &proc_contexts[idx];
     if(walker_queue == NULL) return;
@@ -110,24 +113,6 @@ static void run_proc_generic(int idx)
     printf("eval: %s <= %d at t=%.1f d=%d\n",
         ctx->target_name, result, current_time, delta + 1);
 }
-// CHIRAG : one function per process slot.... C has no closures so this is the pattern
-static void run_proc_0(void) { run_proc_generic(0); }
-static void run_proc_1(void) { run_proc_generic(1); }
-static void run_proc_2(void) { run_proc_generic(2); }
-static void run_proc_3(void) { run_proc_generic(3); }
-
-static void (*proc_run_funcs[MAX_PROC_CONTEXTS])(void) = {
-    run_proc_0, run_proc_1, run_proc_2, run_proc_3
-};
-
-// CHIRAG : dummy run function for now.... 
-// later this will be replaced by expression evaluator
-// for now just prints that process ran
-//----------------------------------------------------------------------------------------------
-// static void dummy_run(void)
-// {
-//     printf("process ran\n");
-// }
 
 // CHIRAG : main entry point.... called from main after parsing
 // root is the top of the AST.... usually NODE_ARCH
@@ -170,44 +155,21 @@ static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch)
                 walk_node(node->data.arch.processes[i], signals, sch);
             break;
 
-        //-----------------------------------------------------------------------------------
-            // CHIRAG : process node.... create Process struct
-        // // add signals from sensitivity list to it
-        // // add process to scheduler
-        // case NODE_PROCESS:
-        //     {
-        //         printf("walker: creating process with %d sensitivity signals\n",
-        //             node->data.process.sensitivity_count);
-
-        //         // create process with dummy run function for now
-        //         Process p = process_init("vhdl_process", dummy_run);
-
-        //         // add each sensitivity signal to the process
-        //         for(int i = 0; i < node->data.process.sensitivity_count; i++)
-        //         {
-        //             char* sig_name = node->data.process.sensitivity[i];
-        //             Signal* s = find_signal(signals, sig_name);
-        //             if(s != NULL)
-        //             {
-        //                 process_add_signal(&p, *s);
-        //                 printf("walker: process watches signal %s\n", sig_name);
-        //             }
-        //             else
-        //                 printf("walker: WARNING signal %s not found\n", sig_name);
-        //         }
-
-        //         // add process to scheduler
-        //         scheduler_add_process(sch, p);
-        //         printf("walker: process added to scheduler\n");
-        //     }
-        //     break;
         case NODE_PROCESS:
         {
             printf("walker: creating process with %d sensitivity signals\n",
                 node->data.process.sensitivity_count);
             
             // CHIRAG : find the assignment statement inside this process
-            // store target + expr in context so run_proc_N can use them
+            // store target + expr in context so run_proc_generic can use them via idx
+            // CHIRAG 02-04-26 :: grow proc_contexts dynamically if needed
+            // realloc doubles capacity each time so amortized cost is O(1) per insert
+            if(proc_context_count >= proc_contexts_capacity)
+            {
+                proc_contexts_capacity = proc_contexts_capacity == 0 ? 8 : proc_contexts_capacity * 2;
+                proc_contexts = realloc(proc_contexts, proc_contexts_capacity * sizeof(ProcessContext));
+            }
+
             int ctx_idx = proc_context_count;
             ProcessContext* ctx = &proc_contexts[ctx_idx];
             ctx->signals = signals;
@@ -224,7 +186,10 @@ static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch)
                 }
             }
         
-            Process p = process_init("vhdl_process", proc_run_funcs[ctx_idx]);
+            // CHIRAG 02-04-26 :: pass run_proc_generic directly as the run function
+            // and ctx_idx so process knows which context slot is its own
+            // scheduler will call p.run(p.ctx_idx) which routes to correct context
+            Process p = process_init("vhdl_process", run_proc_generic, ctx_idx);
             proc_context_count++;
         
             for(int i = 0; i < node->data.process.sensitivity_count; i++)
@@ -244,7 +209,7 @@ static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch)
             printf("walker: process added to scheduler\n");
         }
         break;
-//----------------------------------------------------------------------------------------------
+
         // CHIRAG : assignment node.... for now just print
         // later this will set up the process run function properly
         case NODE_ASSIGN:

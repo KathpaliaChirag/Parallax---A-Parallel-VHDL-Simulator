@@ -23,7 +23,9 @@ void scheduler_notify(Scheduler* sch, Signal s)
         for(int j=0; j<sch->process_ARRAY.data[i].senstivity_list.size; j++)
         if(strcmp(sch->process_ARRAY.data[i].senstivity_list.data[j].name, s.name) ==0)
         {
-            sch->process_ARRAY.data[i].run();
+            // sch->process_ARRAY.data[i].run();
+            // CHIRAG 02-04-26 06:01 :: changed run call added ctx_idx
+            sch->process_ARRAY.data[i].run(sch->process_ARRAY.data[i].ctx_idx);
             printf("process woke up %s", sch->process_ARRAY.data[i].name);
         }
     }

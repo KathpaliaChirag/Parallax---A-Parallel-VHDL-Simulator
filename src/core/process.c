@@ -11,13 +11,14 @@
 #include "signal.h"
 #include <stdlib.h>
 static int id_counter =0;
-Process process_init(char *name, void (*run)(void))
+Process process_init(char *name, void (*run)(int), int ctx_idx)
 {
 Process p;
 p.id = id_counter;
 id_counter++;
 p.name = name;
 p.run = run;
+p.ctx_idx=ctx_idx;
 DYNARRAY_INIT(p.senstivity_list)
 return p;
 }
