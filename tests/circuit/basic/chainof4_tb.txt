@@ -1,0 +1,6 @@
+# testbench for chain4
+# 4 stage chain ... A feeds B feeds C feeds D feeds E
+# we drive A and watch the value propagate through all stages
+A 1 1
+A 0 2
+A 1 3

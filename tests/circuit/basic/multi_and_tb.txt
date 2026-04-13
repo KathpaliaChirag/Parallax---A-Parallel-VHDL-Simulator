@@ -1,0 +1,10 @@
+# testbench for multi_and
+# format: SIGNAL_NAME VALUE TIME
+A0 1 1
+B0 1 1
+A1 0 1
+B1 1 1
+A2 1 2
+B2 1 2
+A3 0 3
+B3 0 3

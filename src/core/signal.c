@@ -20,6 +20,7 @@ Signal* init_signal(char *n)
     s->type =0;
     s->prev_value = 0;
     s->value_next =0;
+    s->direction = 0;  // default input
     return s;
 }
 //as for update signla initial thought was time will come from the system

@@ -56,7 +56,7 @@ parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast_walke
 		-o parser_test.exe
 
 test: parser
-	./parser_test.exe and-gate < tests/circuit/basic/and_gate.vhdl
+	./parser_test.exe and-gate < tests/circuit/basic/multi_and.vhdl
 
 test_or: parser
 	./parser_test.exe or-gate < tests/circuit/basic/or_gate.vhdl
@@ -74,6 +74,15 @@ wave_and:
 wave_parser:
 	gtkwave output-and-gate.vcd
 
+# CHIRAG 13-04-26 :: generic test target ... usage: make circuit FILE=tests/circuit/basic/multi_and.vhdl
+# pass any vhdl file from any directory ... output vcd auto named after file
+circuit: parser
+	./parser_test.exe $(basename $(notdir $(FILE))) < $(FILE)
+# CHIRAG 13-04-26 :: run circuit with optional testbench
+# usage: make circuit FILE=tests/circuit/basic/multi_and.vhdl
+# usage: make circuit FILE=tests/circuit/basic/multi_and.vhdl TB=tests/circuit/basic/multi_and_tb.txt
+circuit: parser
+	./parser_test.exe $(basename $(notdir $(FILE))) $(TB) < $(FILE)
 clean:
 	rm -f main.exe parser_test.exe
 	rm -f $(PARSER)/parser.c $(PARSER)/parser.h $(PARSER)/lexer.c

@@ -23,6 +23,9 @@ int value_next; // CHIRAG 02-04-26  08:20 :: added simply put for the idea of pa
 // at delta boundary sequential.c sweeps value_next into value for every signal
 // this means all processes read frozen state during evaluation - correct VHDL semantics
 // and under parallelism threads never conflict on reads vs writes
+//CHIRAG 13-04-26 :: Okay so ideally today I realised to give values we will have to set input outputs
+// this adding an int direction  0 for input 1 for output
+int direction; //0=input, 1=output
 } Signal;
 DYNARRAY_TYPE(Signal) //added here as a part of design choice CHIRAG-10-03-26 12:26
 Signal* init_signal(char* name);

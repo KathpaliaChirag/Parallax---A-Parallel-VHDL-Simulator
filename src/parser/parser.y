@@ -8,6 +8,8 @@
 #include "../core/utils.h"
 #include "../output/vcd.h"
 #include "../analysis/dependency.h"
+#include "../output/trace.h"
+#include "../output/vcd.h"
 
 #include "../core/event.h"
 #include "../sim/sequential.h"
@@ -246,19 +248,29 @@ void yyerror(const char* s)
 int main(int argc, char* argv[])
 {
     int result = yyparse();
-    if(result != 0) { printf("parsing failed\n"); return 1; }
+    if(result != 0) 
+    { 
+        printf("parsing failed\n"); 
+        return 1; 
+    }
+    
     printf("parsing done! walking AST now...\n");
 
     DynArray_Signal signals;
     DYNARRAY_INIT(signals)
     Scheduler sch = scheduler_init();
 
+    // walk entity first ... creates all signals from port declarations
+    // walk arch second ... creates all processes and adds them to scheduler
     ast_walk(ast_entity, &signals, &sch);
     ast_walk(ast_root, &signals, &sch);
     printf("AST walk done! %d signals created\n", signals.size);
 
-    // CHIRAG 04-04-26 :: build dependency graph and color it
-    // process count comes from scheduler after ast_walk populates it
+    // CHIRAG 04-04-26 :: build dependency graph after ast_walk
+    // process count comes from scheduler ... ast_walk populates it
+    // dependency_extract walks AST finds read/write sets per process
+    // builds edges where processes share signals ... then colors graph
+    // same color = no conflicts = can run in parallel
     DepGraph* g = graph_build(sch.process_ARRAY.size);
     dependency_extract(ast_root, g);
     graph_free(g);
@@ -266,20 +278,75 @@ int main(int argc, char* argv[])
     EventQueue eq = init_queue();
     walker_queue = &eq;
 
+    // CHIRAG 13-04-26 :: collect all input signals for testbench generation
+    // direction 0 = input ... set in ast_walker when walking NODE_PORT
+    int input_signals[64];
+    int input_count = 0;
+    for(int i = 0; i < signals.size; i++)
+        if(signals.data[i].direction == 0)
+            input_signals[input_count++] = i;
+
     Event e;
     e.type = 0; e.delta = 0;
 
-    e.signal_name = "A"; e.new_value = 0; e.time = 0; insert_ele(&eq, e);
-    e.signal_name = "B"; e.new_value = 0; e.time = 0; insert_ele(&eq, e);
-    e.signal_name = "A"; e.new_value = 1; e.time = 1; insert_ele(&eq, e);
-    e.signal_name = "B"; e.new_value = 1; e.time = 2; insert_ele(&eq, e);
-    e.signal_name = "A"; e.new_value = 0; e.time = 3; insert_ele(&eq, e);
-    e.signal_name = "B"; e.new_value = 0; e.time = 4; insert_ele(&eq, e);
-    e.signal_name = "A"; e.new_value = 1; e.time = 5; insert_ele(&eq, e);
-    e.signal_name = "B"; e.new_value = 0; e.time = 7; insert_ele(&eq, e);
-    e.signal_name = "A"; e.new_value = 1; e.time = 9; insert_ele(&eq, e);
-    e.signal_name = "B"; e.new_value = 1; e.time = 9; insert_ele(&eq, e);
+    // CHIRAG 13-04-26 :: two modes for seeding events
+    // mode 1 ... manual testbench file passed as argv[2]
+    // format is simple ... SIGNAL_NAME VALUE TIME ... one per line ... # for comments
+    // mode 2 ... auto generate input combinations ... capped at 16 so output stays readable
+    if(argc > 2)
+    {
+        // manual testbench mode ... user controls exactly what gets tested
+        // good for sequential circuits ... clocks ... specific scenarios
+        printf("testbench mode: reading from %s\n", argv[2]);
+        FILE* tb = fopen(argv[2], "r");
+        if(tb == NULL)
+        {
+            printf("error: cant open testbench %s\n", argv[2]);
+            return 1;
+        }
 
+        char sig[64]; int val; double time;
+        char line[128];
+        while(fgets(line, 128, tb))
+        {
+            // skip comments and empty lines
+            if(line[0] == '#' || line[0] == '\n') continue;
+            if(sscanf(line, "%s %d %lf", sig, &val, &time) == 3)
+            {
+                e.signal_name = strdup(sig);
+                e.new_value = val;
+                e.time = time;
+                e.delta = 0;
+                e.type = 0;
+                insert_ele(&eq, e);
+                printf("tb: %s = %d at t=%.0f\n", sig, val, time);
+            }
+        }
+        fclose(tb);
+    }
+    else
+    {
+        // auto testbench mode ... generates all 2^N input combinations
+        // capped at 16 combinations so output stays readable for large circuits
+        // good for combinational circuits ... exhaustive for small input counts
+        int limit = (1 << input_count);
+        if(limit > 16) limit = 16;
+        printf("auto testbench: found %d input signals ... generating %d combinations\n",
+            input_count, limit);
+
+        // combination c ... bit j of c = value of input signal j
+        // so c=0 means all inputs 0 ... c=1 means first input 1 rest 0 ... etc
+        for(int c = 0; c < limit; c++)
+            for(int j = 0; j < input_count; j++)
+            {
+                e.signal_name = signals.data[input_signals[j]].name;
+                e.new_value = (c >> j) & 1;
+                e.time = c + 1;
+                insert_ele(&eq, e);
+            }
+    }
+
+    // CHIRAG 13-04-26 :: vcd filename from argv[1] ... default to output-parser.vcd
     char vcd_name[64];
     if(argc > 1)
         snprintf(vcd_name, 64, "output-%s.vcd", argv[1]);
@@ -289,11 +356,17 @@ int main(int argc, char* argv[])
     vcd_init(vcd_name);
     vcd_write_header(&signals);
     init_run();
+    trace_init();
     run_simulation(&eq, &sch, &signals);
 
     printf("\nfinal signal values:\n");
     for(int i = 0; i < signals.size; i++)
         printf("  %s = %d\n", signals.data[i].name, signals.data[i].value);
 
+    // CHIRAG 13-04-26 :: print hash at end ... this is the correctness contract
+    // sequential hash must equal parallel hash later ... if they differ there is a bug
+    printf("trace hash: %u\n", trace_hash());
+
+    vcd_close();
     return 0;
 }

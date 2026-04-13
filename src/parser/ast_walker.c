@@ -144,6 +144,8 @@ static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch)
                     node->data.port.name,
                     node->data.port.direction == DIR_IN ? "in" : "out");
                 Signal* s = init_signal(node->data.port.name);
+                // 13-04-26 :: okay so i have finally added direction here to be taken
+                s->direction = (node->data.port.direction == DIR_OUT) ? 1 : 0;
                 DYNARRAY_INSERT((*signals), *s)
             }
             break;

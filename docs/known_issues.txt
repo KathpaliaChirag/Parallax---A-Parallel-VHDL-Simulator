@@ -1,0 +1,36 @@
+KNOWN ISSUES / TODO -- Parallax Phase 2
+last updated: 13-04-26
+
+1. DOUBLE NOTIFY BUG
+   file: src/sim/sequential.c
+   issue: if multiple sensitivity signals change in same delta ... process wakes up once per changed signal
+   example: process(A0, B0) with both A0 and B0 changing at t=1 ... process fires twice
+   impact: double trace_record calls ... hash is dirty but consistent between seq and parallel
+   fix: in scheduler_notify track which processes already woken this delta ... skip if already notified
+   priority: medium ... correctness of values is fine ... hash consistency is affected
+
+2. HARDCODED adder() AND dff_logic() BYPASS EVENT SYSTEM
+   file: main.c
+   issue: adder() and dff_logic() write directly to signal values and call vcd_write_change manually
+   impact: these dont go through event queue ... delta ordering doesnt apply to them
+   fix: proper fix is to insert events into queue from these functions
+   priority: low ... these are demo tests only ... parser path is clean
+
+3. DUPLICATE circuit TARGET IN MAKEFILE
+   file: Makefile
+   issue: two circuit targets defined ... make warns about it
+   fix: remove old one keep new one
+   priority: low ... warning only not error
+
+4. VCD_CLOSE / VCD_WRITE_CLOSE NAMING MISMATCH
+   file: src/output/vcd.h vs vcd.c
+   issue: header declared vcd_write_close ... implementation is vcd_close
+   status: fixed 13-04-26 ... header updated to vcd_close
+   priority: done
+
+5. proc_contexts NOT FREED AT END
+   file: src/parser/ast_walker.c
+   issue: proc_contexts malloc'd with realloc ... never freed
+   impact: memory leak ... not a problem for short runs
+   fix: add cleanup function to ast_walker
+   priority: low
