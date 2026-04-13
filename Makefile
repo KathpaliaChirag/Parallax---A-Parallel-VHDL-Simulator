@@ -11,6 +11,7 @@ CORE = $(SRC)/core
 SIM = $(SRC)/sim
 PARSER = $(SRC)/parser
 OUTPUT = $(SRC)/output
+ANALYSIS = $(SRC)/analysis
 TESTS = tests/circuit/basic
 
 all: sim parser
@@ -20,7 +21,7 @@ sim: main.c
 	$(CC) $(CFLAGS) main.c -o main.exe
 
 # CHIRAG 02-04-26 :: proper sim target that links object files separately
-# this is needed for phase 2 — cant link openmp correctly with the include-everything approach
+# this is needed for phase 2 ... cant link openmp correctly with the include-everything approach
 sim_proper: main.c
 	$(CC) $(CFLAGS) $(OFLAGS) \
 		main.c \
@@ -50,6 +51,8 @@ parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast_walke
 		$(SIM)/sequential.c \
 		$(OUTPUT)/vcd.c \
 		$(OUTPUT)/trace.c \
+		$(ANALYSIS)/graph.c \
+		$(ANALYSIS)/dependency.c \
 		-o parser_test.exe
 
 test: parser
@@ -76,13 +79,13 @@ clean:
 	rm -f $(PARSER)/parser.c $(PARSER)/parser.h $(PARSER)/lexer.c
 
 help:
-	@echo "make            → build everything"
-	@echo "make test       → test parser on and_gate.vhdl"
-	@echo "make run        → run simulator"
-	@echo "make sim_proper → build with openmp support"
-	@echo "make wave_dff   → open DFF waveform in gtkwave"
-	@echo "make wave_and   → open AND gate waveform in gtkwave"
-	@echo "make wave_parser→ open parser output waveform in gtkwave"
-	@echo "make clean      → remove generated files"
+	@echo "make            -> build everything"
+	@echo "make test       -> test parser on and_gate.vhdl"
+	@echo "make run        -> run simulator"
+	@echo "make sim_proper -> build with openmp support"
+	@echo "make wave_dff   -> open DFF waveform in gtkwave"
+	@echo "make wave_and   -> open AND gate waveform in gtkwave"
+	@echo "make wave_parser-> open parser output waveform in gtkwave"
+	@echo "make clean      -> remove generated files"
 
 .PHONY: all sim sim_proper parser test test_or run wave_dff wave_and wave_parser clean help

@@ -7,6 +7,7 @@
 #include "../core/signal.h"
 #include "../core/utils.h"
 #include "../output/vcd.h"
+#include "../analysis/dependency.h"
 
 #include "../core/event.h"
 #include "../sim/sequential.h"
@@ -256,6 +257,12 @@ int main(int argc, char* argv[])
     ast_walk(ast_root, &signals, &sch);
     printf("AST walk done! %d signals created\n", signals.size);
 
+    // CHIRAG 04-04-26 :: build dependency graph and color it
+    // process count comes from scheduler after ast_walk populates it
+    DepGraph* g = graph_build(sch.process_ARRAY.size);
+    dependency_extract(ast_root, g);
+    graph_free(g);
+
     EventQueue eq = init_queue();
     walker_queue = &eq;
 
@@ -273,7 +280,6 @@ int main(int argc, char* argv[])
     e.signal_name = "A"; e.new_value = 1; e.time = 9; insert_ele(&eq, e);
     e.signal_name = "B"; e.new_value = 1; e.time = 9; insert_ele(&eq, e);
 
-    // CHIRAG : vcd filename from command line arg.... default to output-parser.vcd
     char vcd_name[64];
     if(argc > 1)
         snprintf(vcd_name, 64, "output-%s.vcd", argv[1]);
