@@ -20,6 +20,7 @@ p.name = name;
 p.run = run;
 p.ctx_idx=ctx_idx;
 DYNARRAY_INIT(p.senstivity_list)
+p.notified = 0; //added on 15-04-26
 return p;
 }
 // next up i think i need a way to add signal to process senstivity list for that i will put to use this mechanism of marco that i built

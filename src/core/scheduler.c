@@ -20,11 +20,18 @@ void scheduler_notify(Scheduler* sch, Signal s)
 {
     for(int i =0; i<sch->process_ARRAY.size; i++)
     {
+        // CHIRAG 15-04-26 :: skip if already notified this delta
+        // this is the core fix for double-notify bug
+        // process(A,B) ... A changes ... notified=1 ... B changes ... skip
+        // process fires exactly once ... matches VHDL spec
+        // matches parallel behavior which also fires each process once via triggered list
+        if(sch->process_ARRAY.data[i].notified) continue;
         for(int j=0; j<sch->process_ARRAY.data[i].senstivity_list.size; j++)
         if(strcmp(sch->process_ARRAY.data[i].senstivity_list.data[j].name, s.name) ==0)
         {
             // sch->process_ARRAY.data[i].run();
             // CHIRAG 02-04-26 06:01 :: changed run call added ctx_idx
+            sch->process_ARRAY.data[i].notified = 1;
             sch->process_ARRAY.data[i].run(sch->process_ARRAY.data[i].ctx_idx);
             printf("process woke up %s", sch->process_ARRAY.data[i].name);
         }

@@ -1719,8 +1719,8 @@ int main(int argc, char* argv[])
     vcd_write_header(&signals);
     init_run();
     trace_init();
-    run_simulation(&eq, &sch, &signals);
-    // run_parallel_simulation(&eq, &sch, &signals, g);
+    // run_simulation(&eq, &sch, &signals);
+    run_parallel_simulation(&eq, &sch, &signals, g);
 
     printf("\nfinal signal values:\n");
     for(int i = 0; i < signals.size; i++)

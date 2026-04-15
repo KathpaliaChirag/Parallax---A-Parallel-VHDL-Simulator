@@ -67,6 +67,11 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
                      // doesn't re-notify for same change
                      signal->data[i].prev_value = signal->data[i].value;
                 }
+            // CHIRAG 15-04-26 :: reset notified flags after all processes have been woken
+            // must reset here so next delta starts fresh ... every process can be woken again
+            // if we dont reset ... process only ever fires once in entire simulation
+            for(int i = 0; i < sch->process_ARRAY.size; i++)
+                sch->process_ARRAY.data[i].notified = 0;
             if(changed)
             advance_delta();
             
