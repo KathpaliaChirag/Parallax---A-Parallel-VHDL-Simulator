@@ -35,10 +35,12 @@ sim_proper: main.c
 		$(OUTPUT)/trace.c \
 		-o main.exe
 
+# CHIRAG 15-04-26 :: parser now includes parallel.c and openmp flag
+# parallel.c needs fopenmp to compile ... added to parser target
 parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast_walker.c
 	bison -d $(PARSER)/parser.y -o $(PARSER)/parser.c
 	flex -o $(PARSER)/lexer.c $(PARSER)/lexer.l
-	$(CC) $(CFLAGS) \
+	$(CC) $(CFLAGS) $(OFLAGS) \
 		$(PARSER)/parser.c \
 		$(PARSER)/lexer.c \
 		$(PARSER)/ast.c \
@@ -49,6 +51,7 @@ parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast_walke
 		$(CORE)/event_queue.c \
 		$(CORE)/delta.c \
 		$(SIM)/sequential.c \
+		$(SIM)/parallel.c \
 		$(OUTPUT)/vcd.c \
 		$(OUTPUT)/trace.c \
 		$(ANALYSIS)/graph.c \
@@ -56,7 +59,7 @@ parser: $(PARSER)/parser.y $(PARSER)/lexer.l $(PARSER)/ast.c $(PARSER)/ast_walke
 		-o parser_test.exe
 
 test: parser
-	./parser_test.exe and-gate < tests/circuit/basic/multi_and.vhdl
+	./parser_test.exe and-gate < tests/circuit/basic/and_gate.vhdl
 
 test_or: parser
 	./parser_test.exe or-gate < tests/circuit/basic/or_gate.vhdl
@@ -74,15 +77,13 @@ wave_and:
 wave_parser:
 	gtkwave output-and-gate.vcd
 
-# CHIRAG 13-04-26 :: generic test target ... usage: make circuit FILE=tests/circuit/basic/multi_and.vhdl
-# pass any vhdl file from any directory ... output vcd auto named after file
-circuit: parser
-	./parser_test.exe $(basename $(notdir $(FILE))) < $(FILE)
 # CHIRAG 13-04-26 :: run circuit with optional testbench
 # usage: make circuit FILE=tests/circuit/basic/multi_and.vhdl
 # usage: make circuit FILE=tests/circuit/basic/multi_and.vhdl TB=tests/circuit/basic/multi_and_tb.txt
+# CHIRAG 15-04-26 :: removed duplicate circuit target ... was causing makefile warning
 circuit: parser
 	./parser_test.exe $(basename $(notdir $(FILE))) $(TB) < $(FILE)
+
 clean:
 	rm -f main.exe parser_test.exe
 	rm -f $(PARSER)/parser.c $(PARSER)/parser.h $(PARSER)/lexer.c
@@ -95,6 +96,7 @@ help:
 	@echo "make wave_dff   -> open DFF waveform in gtkwave"
 	@echo "make wave_and   -> open AND gate waveform in gtkwave"
 	@echo "make wave_parser-> open parser output waveform in gtkwave"
+	@echo "make circuit    -> run any circuit with optional testbench"
 	@echo "make clean      -> remove generated files"
 
-.PHONY: all sim sim_proper parser test test_or run wave_dff wave_and wave_parser clean help
+.PHONY: all sim sim_proper parser test test_or run wave_dff wave_and wave_parser circuit clean help

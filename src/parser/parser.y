@@ -10,12 +10,11 @@
 #include "../analysis/dependency.h"
 #include "../output/trace.h"
 #include "../output/vcd.h"
-
+#include "../sim/parallel.h"
 #include "../core/event.h"
 #include "../sim/sequential.h"
 #include "../core/delta.h"
 #include "../core/event_queue.h"
-extern EventQueue* walker_queue;
 
 void yyerror(const char* s);
 int yylex();
@@ -273,11 +272,14 @@ int main(int argc, char* argv[])
     // same color = no conflicts = can run in parallel
     DepGraph* g = graph_build(sch.process_ARRAY.size);
     dependency_extract(ast_root, g);
-    graph_free(g);
+    // graph_free(g);
 
     EventQueue eq = init_queue();
-    walker_queue = &eq;
 
+    // walker_queue = &eq;
+    // CHIRAG 15-04-26 :: thread 0 gets the main queue ... sequential mode uses thread 0
+    // omp_get_thread_num() returns 0 in sequential ... so run_proc_generic picks up correct queue
+    walker_queues[0] = &eq;
     // CHIRAG 13-04-26 :: collect all input signals for testbench generation
     // direction 0 = input ... set in ast_walker when walking NODE_PORT
     int input_signals[64];
@@ -358,6 +360,7 @@ int main(int argc, char* argv[])
     init_run();
     trace_init();
     run_simulation(&eq, &sch, &signals);
+    // run_parallel_simulation(&eq, &sch, &signals, g);
 
     printf("\nfinal signal values:\n");
     for(int i = 0; i < signals.size; i++)
@@ -366,7 +369,7 @@ int main(int argc, char* argv[])
     // CHIRAG 13-04-26 :: print hash at end ... this is the correctness contract
     // sequential hash must equal parallel hash later ... if they differ there is a bug
     printf("trace hash: %u\n", trace_hash());
-
+    graph_free(g); 
     vcd_close();
     return 0;
 }

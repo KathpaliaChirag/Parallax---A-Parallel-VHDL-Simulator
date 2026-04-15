@@ -23,7 +23,7 @@
 #include "../core/event.h"
 #include "../core/event_queue.h"
 #include "../core/delta.h"
-
+ #include <omp.h>
 // CHIRAG : forward declaration.... walk_node calls itself recursively
 static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch);
 
@@ -56,8 +56,27 @@ static int proc_contexts_capacity = 0;
 
 // CHIRAG : set this before calling run_simulation
 // process run functions insert events into this queue
-EventQueue* walker_queue = NULL;
-
+// EventQueue* walker_queue = NULL;
+// problem ... walker_queue is a global pointer ... one copy shared by all threads
+// in parallel.c inside omp parallel for we do this ...
+//     walker_queue = &local_queues[tid];
+// thread 0 sets walker_queue to local_queues[0]
+// thread 1 sets walker_queue to local_queues[1]
+// but since its ONE global ... thread 1 overwrites thread 0s value
+// now both threads read walker_queue and see local_queues[1]
+// thread 0 inserts its events into local_queues[1] by mistake
+// thread 0s events go to wrong queue ... get merged twice or lost entirely
+// wrong events = wrong simulation = wrong hash
+//
+// fix ... threadprivate tells openmp ... give every thread its OWN copy of walker_queue
+// thread 0 has its own walker_queue ... thread 1 has its own walker_queue
+// when thread 0 sets walker_queue = local_queues[0] ... thread 1 cant see or overwrite it
+// zero conflict ... each thread writes to correct local queue
+// EventQueue* walker_queue = NULL;
+// #pragma omp threadprivate(walker_queue)
+// CHIRAG 15-04-26 :: one queue pointer per thread ... thread N uses walker_queues[N]
+// replaces threadprivate approach which caused linker issues with bison generated parser
+EventQueue* walker_queues[64];
 // CHIRAG : walk an expression AST node and compute the result
 // reads current signal values from the signals array
 static int eval_expr(ASTNode* expr, DynArray_Signal* signals)
@@ -89,10 +108,59 @@ static int eval_expr(ASTNode* expr, DynArray_Signal* signals)
 // CHIRAG 02-04-26 :: this is now THE run function for every process
 // idx comes from p.ctx_idx which scheduler passes when calling p.run(p.ctx_idx)
 // no more one-function-per-slot pattern.... run_proc_generic handles all processes
+// void run_proc_generic(int idx)
+// {
+//     ProcessContext* ctx = &proc_contexts[idx];
+//     if(walker_queue == NULL) return;
+
+//     Signal* target = find_signal(ctx->signals, ctx->target_name);
+//     if(target == NULL) return;
+
+//     int result = eval_expr(ctx->expr, ctx->signals);
+
+//     // CHIRAG : only schedule event if value actually changes
+//     // without this check.... Y<=0 schedules itself forever
+//     if(result == target->value) return;
+
+//     Event e;
+//     e.signal_name = target->name;
+//     e.new_value   = result;
+//     e.time        = current_time;
+//     e.delta       = delta + 1;
+//     e.type        = 0;
+//     insert_ele(walker_queue, e);
+//     printf("eval: %s <= %d at t=%.1f d=%d\n",
+//         ctx->target_name, result, current_time, delta + 1);
+// }
+
+
+// CHIRAG 15-04-26 :: why walker_queues[omp_get_thread_num()] instead of walker_queue?
+    //
+    // old code had a single global walker_queue pointer
+    // in sequential mode this was fine ... only one thread ... no conflict
+    //
+    // in parallel mode multiple threads call run_proc_generic simultaneously
+    // if all threads use same walker_queue ... two threads call insert_ele on same heap
+    // insert_ele does bubble-up ... two threads doing bubble-up simultaneously = heap corruption
+    // events get lost or duplicated ... wrong simulation results
+    //
+    // fix ... give each thread its own queue
+    // walker_queues is an array of 64 queue pointers ... one slot per thread
+    // thread 0 uses walker_queues[0] ... thread 1 uses walker_queues[1] ... etc
+    // omp_get_thread_num() returns current thread id ... 0 in sequential mode
+    // so sequential path still works exactly as before ... walker_queues[0] = &eq in parser main
+    //
+    // after parallel section ... parallel.c merges all local queues back into global queue
+    
 void run_proc_generic(int idx)
 {
     ProcessContext* ctx = &proc_contexts[idx];
-    if(walker_queue == NULL) return;
+
+    // CHIRAG 15-04-26 :: use thread local queue instead of single global walker_queue
+    // omp_get_thread_num() returns 0 for sequential ... so sequential path still works
+    // thread N writes to walker_queues[N] ... no contention between threads
+    EventQueue* q = walker_queues[omp_get_thread_num()];
+    if(q == NULL) return;
 
     Signal* target = find_signal(ctx->signals, ctx->target_name);
     if(target == NULL) return;
@@ -109,7 +177,7 @@ void run_proc_generic(int idx)
     e.time        = current_time;
     e.delta       = delta + 1;
     e.type        = 0;
-    insert_ele(walker_queue, e);
+    insert_ele(q, e);
     printf("eval: %s <= %d at t=%.1f d=%d\n",
         ctx->target_name, result, current_time, delta + 1);
 }
