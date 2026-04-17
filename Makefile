@@ -81,9 +81,13 @@ wave_parser:
 # usage: make circuit FILE=tests/circuit/basic/multi_and.vhdl
 # usage: make circuit FILE=tests/circuit/basic/multi_and.vhdl TB=tests/circuit/basic/multi_and_tb.txt
 # CHIRAG 15-04-26 :: removed duplicate circuit target ... was causing makefile warning
+# circuit: parser
+# 	./parser_test.exe $(basename $(notdir $(FILE))) $(TB) < $(FILE)
+# CHIRAG 17-04-26 :: THREADS controls how many openmp threads to use
+# OMP_PROC_BIND=close keeps threads on same socket ... reduces cache miss overhead
+# usage: make circuit FILE=... TB=... MODE=--par THREADS=4
 circuit: parser
-	./parser_test.exe $(basename $(notdir $(FILE))) $(TB) < $(FILE)
-
+	OMP_NUM_THREADS=$(or $(THREADS),1) OMP_PROC_BIND=close ./parser_test.exe $(basename $(notdir $(FILE))) $(TB) $(MODE) < $(FILE)
 clean:
 	rm -f main.exe parser_test.exe
 	rm -f $(PARSER)/parser.c $(PARSER)/parser.h $(PARSER)/lexer.c

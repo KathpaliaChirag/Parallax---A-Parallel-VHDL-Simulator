@@ -15,6 +15,7 @@
 #include "../sim/sequential.h"
 #include "../core/delta.h"
 #include "../core/event_queue.h"
+#include <omp.h>
 
 void yyerror(const char* s);
 int yylex();
@@ -359,9 +360,36 @@ int main(int argc, char* argv[])
     vcd_write_header(&signals);
     init_run();
     trace_init();
+    
+    // CHIRAG 17-04-26 :: mode flag ... argv[3] is --seq or --par
+    
+    // old method was that i had both runs and was commenting a functtion call then running other
+    // well that has been annowing so will be adding a mode variable to ask for the mode and based on that we run mode
+    
     // run_simulation(&eq, &sch, &signals);
-    run_parallel_simulation(&eq, &sch, &signals, g);
+    // run_parallel_simulation(&eq, &sch, &signals, g);
 
+    
+    // default is parallel if not specified
+    // just now it occured to me... like why not clock?
+    // ddoesnt it ddo the same thing? isnt it same as Openmp?
+    // timing uses omp_get_wtime() not clock()
+    // clock() measures total CPU time across all threads ... if 4 threads run 1s each clock() = 4s
+    // omp_get_wtime() measures wall clock time ... actual real world time user waited
+    // speedup = seq_wall_time / par_wall_time ... this is why we never use clock to test speedup
+    int use_parallel = 1;
+    if(argc > 3 && strcmp(argv[3], "--seq") == 0)
+        use_parallel = 0;
+
+    double t_start = omp_get_wtime();
+    if(use_parallel)
+        run_parallel_simulation(&eq, &sch, &signals, g);
+    else
+        run_simulation(&eq, &sch, &signals);
+    double t_end = omp_get_wtime();
+    printf("mode: %s\n", use_parallel ? "parallel" : "sequential");
+    printf("threads: %d\n", omp_get_max_threads());
+    printf("simulation time: %.9f seconds\n", t_end - t_start);
     printf("\nfinal signal values:\n");
     for(int i = 0; i < signals.size; i++)
         printf("  %s = %d\n", signals.data[i].name, signals.data[i].value);
