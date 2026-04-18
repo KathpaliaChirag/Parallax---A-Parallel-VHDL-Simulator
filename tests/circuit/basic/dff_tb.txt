@@ -1,0 +1,15 @@
+# testbench for DFF ... more comprehensive
+# D=1 before CLK rises ... Q should capture 1
+D 1 1
+CLK 1 2
+CLK 0 3
+# D changes while CLK=0 ... Q should NOT change
+D 0 4
+# CLK rises again ... Q should capture new D=0
+CLK 1 5
+CLK 0 6
+# D=1 again ... CLK stays low ... Q should stay 0
+D 1 7
+# final CLK rise ... Q should capture 1
+CLK 1 8
+CLK 0 9

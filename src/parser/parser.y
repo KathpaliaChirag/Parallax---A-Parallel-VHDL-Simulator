@@ -195,13 +195,25 @@ signal_assignment
 if_statement
     : IF IDENTIFIER '=' bit_literal THEN statement_list END_TOK IF ';'
         {
+            // CHIRAG 18-04-26 :: fixed if statement parsing
+            // old code never stored inner statements into NODE_IF
+            // they leaked into outer process statement list instead
+            // fix ... save temp_stmt_count before parsing inner statements
+            // then copy them into if node and restore count
             $$ = ast_new_node(NODE_IF);
             $$->data.if_stmt.signal_name = strdup($2);
             $$->data.if_stmt.bit_value = $4;
-            printf("parsed if: %s = '%d'\n", $2, $4);
+            // copy inner statements that were collected into temp_stmts
+            // these belong to the if block not the outer process
+            $$->data.if_stmt.statement_count = temp_stmt_count;
+            for(int i = 0; i < temp_stmt_count; i++)
+                $$->data.if_stmt.statements[i] = temp_stmts[i];
+            // reset count so outer process doesnt see these
+            temp_stmt_count = 0;
+            printf("parsed if: %s = '%d' with %d statements\n", $2, $4, $$->data.if_stmt.statement_count);
         }
     ;
-
+    
 bit_literal
     : ZERO  { $$ = 0; }
     | ONE   { $$ = 1; }

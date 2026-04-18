@@ -568,7 +568,7 @@ static const yytype_uint8 yyrline[] =
 {
        0,    72,    72,    82,    96,    98,   103,   112,   124,   126,
      131,   146,   148,   153,   172,   174,   179,   181,   186,   196,
-     206,   207,   211,   217,   224,   231,   237
+     218,   219,   223,   229,   236,   243,   249
 };
 #endif
 
@@ -1335,76 +1335,88 @@ yyreduce:
   case 19: /* if_statement: IF IDENTIFIER '=' bit_literal THEN statement_list END_TOK IF ';'  */
 #line 197 "src/parser/parser.y"
         {
+            // CHIRAG 18-04-26 :: fixed if statement parsing
+            // old code never stored inner statements into NODE_IF
+            // they leaked into outer process statement list instead
+            // fix ... save temp_stmt_count before parsing inner statements
+            // then copy them into if node and restore count
             (yyval.node) = ast_new_node(NODE_IF);
             (yyval.node)->data.if_stmt.signal_name = strdup((yyvsp[-7].str));
             (yyval.node)->data.if_stmt.bit_value = (yyvsp[-5].num);
-            printf("parsed if: %s = '%d'\n", (yyvsp[-7].str), (yyvsp[-5].num));
+            // copy inner statements that were collected into temp_stmts
+            // these belong to the if block not the outer process
+            (yyval.node)->data.if_stmt.statement_count = temp_stmt_count;
+            for(int i = 0; i < temp_stmt_count; i++)
+                (yyval.node)->data.if_stmt.statements[i] = temp_stmts[i];
+            // reset count so outer process doesnt see these
+            temp_stmt_count = 0;
+            printf("parsed if: %s = '%d' with %d statements\n", (yyvsp[-7].str), (yyvsp[-5].num), (yyval.node)->data.if_stmt.statement_count);
         }
-#line 1344 "src/parser/parser.c"
-    break;
-
-  case 20: /* bit_literal: ZERO  */
-#line 206 "src/parser/parser.y"
-            { (yyval.num) = 0; }
-#line 1350 "src/parser/parser.c"
-    break;
-
-  case 21: /* bit_literal: ONE  */
-#line 207 "src/parser/parser.y"
-            { (yyval.num) = 1; }
 #line 1356 "src/parser/parser.c"
     break;
 
+  case 20: /* bit_literal: ZERO  */
+#line 218 "src/parser/parser.y"
+            { (yyval.num) = 0; }
+#line 1362 "src/parser/parser.c"
+    break;
+
+  case 21: /* bit_literal: ONE  */
+#line 219 "src/parser/parser.y"
+            { (yyval.num) = 1; }
+#line 1368 "src/parser/parser.c"
+    break;
+
   case 22: /* expression: IDENTIFIER  */
-#line 212 "src/parser/parser.y"
+#line 224 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_IDENTIFIER;
             (yyval.node)->data.expr.identifier = strdup((yyvsp[0].str));
         }
-#line 1366 "src/parser/parser.c"
+#line 1378 "src/parser/parser.c"
     break;
 
   case 23: /* expression: expression AND_TOK expression  */
-#line 218 "src/parser/parser.y"
+#line 230 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_AND;
             (yyval.node)->data.expr.left = (yyvsp[-2].node);
             (yyval.node)->data.expr.right = (yyvsp[0].node);
         }
-#line 1377 "src/parser/parser.c"
+#line 1389 "src/parser/parser.c"
     break;
 
   case 24: /* expression: expression OR_TOK expression  */
-#line 225 "src/parser/parser.y"
+#line 237 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_OR;
             (yyval.node)->data.expr.left = (yyvsp[-2].node);
             (yyval.node)->data.expr.right = (yyvsp[0].node);
         }
-#line 1388 "src/parser/parser.c"
+#line 1400 "src/parser/parser.c"
     break;
 
   case 25: /* expression: NOT_TOK expression  */
-#line 232 "src/parser/parser.y"
+#line 244 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_NOT;
             (yyval.node)->data.expr.left = (yyvsp[0].node);
         }
-#line 1398 "src/parser/parser.c"
+#line 1410 "src/parser/parser.c"
     break;
 
   case 26: /* expression: '(' expression ')'  */
-#line 238 "src/parser/parser.y"
+#line 250 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[-1].node); }
-#line 1404 "src/parser/parser.c"
+#line 1416 "src/parser/parser.c"
     break;
 
 
-#line 1408 "src/parser/parser.c"
+#line 1420 "src/parser/parser.c"
 
       default: break;
     }
@@ -1597,7 +1609,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 241 "src/parser/parser.y"
+#line 253 "src/parser/parser.y"
 
 
 void yyerror(const char* s)

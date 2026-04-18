@@ -1,7 +1,7 @@
 $timescale 1ns $end
-$var wire 1 ! Input-D $end
-$var wire 1 " Output-Q $end
-$var wire 1 # CLOCK-CLK $end
+$var wire 1 ! D $end
+$var wire 1 " CLK $end
+$var wire 1 # Q $end
 $dumpvars
 0!
 0"
@@ -9,17 +9,25 @@ $dumpvars
 $end
 #1
 0!
-#1
-0#
-#1
-1"
 #2
-1#
-#3
-1!
-#3
+0"
+#2
 0#
 #3
-0"
+1"
 #4
+1!
+#5
+0"
+#5
 1#
+#6
+1"
+#7
+0!
+#8
+0"
+#8
+0#
+#9
+1"
