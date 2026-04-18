@@ -1,0 +1,35 @@
+$timescale 1ns $end
+$var wire 1 ! A0 $end
+$var wire 1 " B0 $end
+$var wire 1 # A1 $end
+$var wire 1 $ B1 $end
+$var wire 1 % SUM0 $end
+$var wire 1 & SUM1 $end
+$var wire 1 ' COUT $end
+$var wire 1 ( CARRY0 $end
+$dumpvars
+0!
+0"
+0#
+0$
+0%
+0&
+0'
+0(
+$end
+#1
+0!
+#1
+0"
+#1
+0(
+#1
+0&
+#2
+0#
+#2
+0$
+#2
+1&
+#2
+0'

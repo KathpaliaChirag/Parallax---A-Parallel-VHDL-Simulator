@@ -1,0 +1,8 @@
+# CHIRAG 18-04-26 :: ripple carry adder testbench
+# test case ... 1+1 then 1+0
+# A0=1 B0=1 ... SUM0 should be 0 ... CARRY0 should be 1
+# A1=1 B1=0 with CARRY0=1 ... SUM1 should be 0 ... COUT should be 1
+A0 1 1
+B0 1 1
+A1 1 2
+B1 0 2

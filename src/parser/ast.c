@@ -95,6 +95,12 @@ void ast_print(ASTNode* node, int depth)
                     ast_print(node->data.expr.left, depth + 1);
                     ast_print(node->data.expr.right, depth + 1);
                     break;
+                case EXPR_XOR:
+                    // CHIRAG 18-04-26 :: xor print ... mirrors or/and ... binary so print both children
+                    printf("EXPR: XOR\n");
+                    ast_print(node->data.expr.left, depth + 1);
+                    ast_print(node->data.expr.right, depth + 1);
+                    break;
                 case EXPR_NOT:
                     printf("EXPR: NOT\n");
                     ast_print(node->data.expr.left, depth + 1);
@@ -102,6 +108,7 @@ void ast_print(ASTNode* node, int depth)
                 case EXPR_IDENTIFIER:
                     printf("EXPR: IDENTIFIER(%s)\n", node->data.expr.identifier);
                     break;
+                
                 case EXPR_BIT_LITERAL:
                     printf("EXPR: BIT('%d')\n", node->data.expr.bit_value);
                     break;

@@ -35,6 +35,11 @@ ASTNode* temp_processes[32];
 int temp_process_count = 0;
 char* temp_sens[32];
 int temp_sens_count = 0;
+// CHIRAG 18-04-26 :: temp storage for internal signal declarations
+// signal CARRY : bit; between IS and BEGIN goes here
+// separate from temp_ports ... ports belong to entity ... these belong to arch
+ASTNode* temp_arch_signals[32];
+int temp_arch_signal_count = 0;
 %}
 
 %code requires {
@@ -52,7 +57,7 @@ int temp_sens_count = 0;
 %token ENTITY ARCHITECTURE PORT PROCESS
 %token BEGIN_TOK END_TOK IS OF
 %token IN_TOK OUT_TOK BIT
-%token AND_TOK OR_TOK NOT_TOK
+%token AND_TOK OR_TOK NOT_TOK XOR_TOK
 %token IF THEN SIGNAL
 %token ASSIGN
 
@@ -61,9 +66,10 @@ int temp_sens_count = 0;
 %type <node> expression port_item port_list process_list statement_list
 %type <str>  identifier_list
 %type <num>  bit_literal
+%type <node> signal_decl signal_decl_list
 
 %left OR_TOK
-%left AND_TOK
+%left AND_TOK XOR_TOK
 %right NOT_TOK
 
 %%
@@ -120,6 +126,27 @@ port_item
         }
     ;
 
+signal_decl_list
+    : signal_decl
+        { $$ = $1; }
+    | signal_decl_list signal_decl
+        { $$ = $2; }
+    ;
+
+signal_decl
+    : SIGNAL IDENTIFIER ':' BIT ';'
+        {
+            // CHIRAG 18-04-26 :: internal signal ... lives in arch not entity
+            // reusing NODE_PORT with DIR_INTERNAL so walker can create Signal struct
+            // same logic as port ... just different direction tag
+            $$ = ast_new_node(NODE_PORT);
+            $$->data.port.name = strdup($2);
+            $$->data.port.direction = DIR_INTERNAL;
+            temp_arch_signals[temp_arch_signal_count++] = $$;
+            printf("parsed internal signal: %s\n", $2);
+        }
+    ;
+
 identifier_list
     : IDENTIFIER
         { $$ = $1; temp_sens[temp_sens_count++] = strdup($1); }
@@ -127,26 +154,47 @@ identifier_list
         { $$ = $1; temp_sens[temp_sens_count++] = strdup($3); }
     ;
 
-architecture_decl
-    : ARCHITECTURE IDENTIFIER OF IDENTIFIER IS BEGIN_TOK process_list END_TOK IDENTIFIER ';'
-        {
-            $$ = ast_new_node(NODE_ARCH);
-            $$->data.arch.name = strdup($2);
-            $$->data.arch.entity_name = strdup($4);
-            // CHIRAG : copy collected processes into arch node
-            for(int i = 0; i < temp_process_count; i++)
-                $$->data.arch.processes[i] = temp_processes[i];
-            $$->data.arch.process_count = temp_process_count;
-            temp_process_count = 0;
-            printf("parsed architecture: %s of %s with %d processes\n", $2, $4, $$->data.arch.process_count);
-        }
-    ;
 
 process_list
     : process_decl
         { $$ = $1; }
     | process_list process_decl
         { $$ = $2; }
+    ;
+
+architecture_decl
+    : ARCHITECTURE IDENTIFIER OF IDENTIFIER IS signal_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'
+        {
+            $$ = ast_new_node(NODE_ARCH);
+            $$->data.arch.name = strdup($2);
+            $$->data.arch.entity_name = strdup($4);
+            for(int i = 0; i < temp_process_count; i++)
+                $$->data.arch.processes[i] = temp_processes[i];
+            $$->data.arch.process_count = temp_process_count;
+            temp_process_count = 0;
+            // CHIRAG 18-04-26 :: copy internal signals into arch node
+            for(int i = 0; i < temp_arch_signal_count; i++)
+                $$->data.arch.signals[i] = temp_arch_signals[i];
+            $$->data.arch.signal_count = temp_arch_signal_count;
+            temp_arch_signal_count = 0;
+            printf("parsed architecture: %s of %s with %d processes, %d internal signals\n",
+                $2, $4, $$->data.arch.process_count, $$->data.arch.signal_count);
+        }
+    | ARCHITECTURE IDENTIFIER OF IDENTIFIER IS BEGIN_TOK process_list END_TOK IDENTIFIER ';'
+        {
+            // CHIRAG 18-04-26 :: no internal signals ... original rule still works
+            // circuits like and_gate have no signal declarations ... this keeps them working
+            $$ = ast_new_node(NODE_ARCH);
+            $$->data.arch.name = strdup($2);
+            $$->data.arch.entity_name = strdup($4);
+            for(int i = 0; i < temp_process_count; i++)
+                $$->data.arch.processes[i] = temp_processes[i];
+            $$->data.arch.process_count = temp_process_count;
+            temp_process_count = 0;
+            $$->data.arch.signal_count = 0;
+            printf("parsed architecture: %s of %s with %d processes\n",
+                $2, $4, $$->data.arch.process_count);
+        }
     ;
 
 process_decl
@@ -213,7 +261,7 @@ if_statement
             printf("parsed if: %s = '%d' with %d statements\n", $2, $4, $$->data.if_stmt.statement_count);
         }
     ;
-    
+
 bit_literal
     : ZERO  { $$ = 0; }
     | ONE   { $$ = 1; }
@@ -230,6 +278,13 @@ expression
         {
             $$ = ast_new_node(NODE_EXPR);
             $$->data.expr.expr_type = EXPR_AND;
+            $$->data.expr.left = $1;
+            $$->data.expr.right = $3;
+        }
+    | expression XOR_TOK expression
+        {
+            $$ = ast_new_node(NODE_EXPR);
+            $$->data.expr.expr_type = EXPR_XOR;
             $$->data.expr.left = $1;
             $$->data.expr.right = $3;
         }

@@ -66,6 +66,7 @@
 "bit"           { return BIT; }
 "and"           { return AND_TOK; }
 "or"            { return OR_TOK; }
+"xor"           { return XOR_TOK; }
 "not"           { return NOT_TOK; }
 "if"            { return IF; }
 "then"          { return THEN; }

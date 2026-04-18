@@ -24,21 +24,23 @@ typedef enum {
     NODE_EXPR,        // expressions.... AND OR NOT IDENTIFIER
 } NodeType;
 
-// CHIRAG : direction of a port.... input or output
 typedef enum {
     DIR_IN,
-    DIR_OUT
+    DIR_OUT,
+    DIR_INTERNAL   // CHIRAG 18-04-26 :: internal wire ... signal X : bit; in architecture
 } PortDir;
 
 // CHIRAG : expression type.... what kind of expression is this node
+// CHIRAG 18-04-26 :: added EXPR_XOR ... sits right next to EXPR_AND and EXPR_OR
 typedef enum {
     EXPR_AND,
     EXPR_OR,
+    EXPR_XOR,    // new
     EXPR_NOT,
     EXPR_IDENTIFIER,
     EXPR_BIT_LITERAL
 } ExprType;
-
+ 
 // forward declaration.... ASTNode refers to itself so i need this
 typedef struct ASTNode ASTNode;
 
@@ -72,8 +74,12 @@ struct ASTNode {
             char* entity_name;
             ASTNode* processes[MAX_CHILDREN];
             int process_count;
+            // CHIRAG 18-04-26 :: added internal signals array
+            // ports live in entity ... internal wires live here in arch
+            // signal CARRY : bit; between IS and BEGIN goes here
+            ASTNode* signals[MAX_CHILDREN];
+            int signal_count;
         } arch;
-
         // process node.... sensitivity list and statements
         struct {
             char* sensitivity[MAX_CHILDREN];  // signal names

@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 40 "src/parser/parser.y"
+#line 45 "src/parser/parser.y"
 
     #include "ast.h"
 
@@ -77,10 +77,11 @@ extern int yydebug;
     AND_TOK = 272,                 /* AND_TOK  */
     OR_TOK = 273,                  /* OR_TOK  */
     NOT_TOK = 274,                 /* NOT_TOK  */
-    IF = 275,                      /* IF  */
-    THEN = 276,                    /* THEN  */
-    SIGNAL = 277,                  /* SIGNAL  */
-    ASSIGN = 278                   /* ASSIGN  */
+    XOR_TOK = 275,                 /* XOR_TOK  */
+    IF = 276,                      /* IF  */
+    THEN = 277,                    /* THEN  */
+    SIGNAL = 278,                  /* SIGNAL  */
+    ASSIGN = 279                   /* ASSIGN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -89,13 +90,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 44 "src/parser/parser.y"
+#line 49 "src/parser/parser.y"
 
     char* str;
     int num;
     ASTNode* node;
 
-#line 99 "src/parser/parser.h"
+#line 100 "src/parser/parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

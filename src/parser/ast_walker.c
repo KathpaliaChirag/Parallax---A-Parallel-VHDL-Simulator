@@ -108,6 +108,9 @@ static int eval_expr(ASTNode* expr, DynArray_Signal* signals)
         case EXPR_OR:
             return eval_expr(expr->data.expr.left, signals)
                  | eval_expr(expr->data.expr.right, signals);
+        case EXPR_XOR:
+            // CHIRAG 18-04-26 :: xor ... A xor B = A^B in C ... 1 if exactly one input is 1
+            return eval_expr(expr->data.expr.left, signals) ^ eval_expr(expr->data.expr.right, signals);
         case EXPR_NOT:
             return !eval_expr(expr->data.expr.left, signals);
         case EXPR_BIT_LITERAL:
@@ -328,21 +331,30 @@ static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch)
             {
                 printf("walker: creating signal %s (%s)\n",
                     node->data.port.name,
-                    node->data.port.direction == DIR_IN ? "in" : "out");
+                    node->data.port.direction == DIR_IN ? "in" :
+                    node->data.port.direction == DIR_OUT ? "out" : "internal");
                 Signal* s = init_signal(node->data.port.name);
-                // 13-04-26 :: okay so i have finally added direction here to be taken
-                s->direction = (node->data.port.direction == DIR_OUT) ? 1 : 0;
+                // CHIRAG 18-04-26 :: internal signals get direction 2
+                // direction 0 = input ... direction 1 = output ... direction 2 = internal wire
+                // testbench auto-mode skips direction!=0 so internal signals never get seeded
+                // correct ... internal wires are driven by processes not testbench
+                s->direction = (node->data.port.direction == DIR_OUT) ? 1 :
+                               (node->data.port.direction == DIR_INTERNAL) ? 2 : 0;
                 DYNARRAY_INSERT((*signals), *s)
             }
             break;
-
         // CHIRAG : arch node.... walk all processes inside it
-        case NODE_ARCH:
-            printf("walker: processing architecture %s\n", node->data.arch.name);
-            for(int i = 0; i < node->data.arch.process_count; i++)
-                walk_node(node->data.arch.processes[i], signals, sch);
-            break;
-
+           case NODE_ARCH:
+                printf("walker: processing architecture %s\n", node->data.arch.name);
+                // CHIRAG 18-04-26 :: walk internal signals FIRST before processes
+                // why first? ... processes reference these signals by name
+                // if we walk processes first ... find_signal returns NULL ... process cant find CARRY etc
+                // signals must exist in the array before any process tries to read/write them
+                for(int i = 0; i < node->data.arch.signal_count; i++)
+                    walk_node(node->data.arch.signals[i], signals, sch);
+                for(int i = 0; i < node->data.arch.process_count; i++)
+                    walk_node(node->data.arch.processes[i], signals, sch);
+                break;
         case NODE_PROCESS:
         {
             printf("walker: creating process with %d sensitivity signals\n",
