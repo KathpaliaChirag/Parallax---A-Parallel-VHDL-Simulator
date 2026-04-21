@@ -244,13 +244,31 @@ void run_proc_generic(int idx)
             // only schedule if value actually changes ... without this check
             // Y<=0 when Y is already 0 would schedule event forever ... infinite loop
             if(result == target->value) continue;
-
+            
+            
+            // CHIRAG 21-04-26 :: after delay scheduling
+            // idea ... VHDL allows Y <= A and B after 10 ns; meaning output
+            // changes 10ns after input changes not immediately
+            // problem ... old code always scheduled at current_time delta+1
+            // that means zero delay ... instantaneous propagation ... not realistic
+            // solution ... check delay_ns from AST node
+            // if 0 ... old behavior ... schedule at current_time delta+1
+            // if >0 ... schedule at current_time + delay_ns with delta=0
+            // delta=0 because its a new timestamp ... fresh start
             Event e;
             e.signal_name = target->name;
             e.new_value   = result;
-            e.time        = current_time;
-            e.delta       = delta + 1;
             e.type        = 0;
+            if(stmt->data.assign.delay_ns > 0)
+            {
+                e.time  = current_time + stmt->data.assign.delay_ns;
+                e.delta = 0;
+            }
+            else
+            {
+                e.time  = current_time;
+                e.delta = delta + 1;
+            }
             insert_ele(q, e);
             printf("eval: %s <= %d at t=%.1f d=%d\n",
                 target->name, result, current_time, delta + 1);

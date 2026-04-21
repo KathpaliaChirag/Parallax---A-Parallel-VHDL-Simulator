@@ -72,6 +72,11 @@
 "else"          { return ELSE_TOK; }
 "then"          { return THEN; }
 "signal"        { return SIGNAL; }
+"after"         { return AFTER_TOK; }
+"ns"            { return NS_TOK; }
+[0-9]+          { yylval.num = atoi(yytext); return INTEGER; }
+\'0\'           { yylval.num = 0; return ZERO; }
+\'1\'           { yylval.num = 1; return ONE; }
 [a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); return IDENTIFIER; }
 [ \t\n]+        { /* skip whitespace */ }
 "--"[^\n]*      { /* skip comment */ }
@@ -83,9 +88,8 @@
 ")"             { return ')'; }
 "="             { return '='; }
 "'"             { return '\''; }
-\'0\'    { yylval.num = 0; return ZERO; }
-\'1\'    { yylval.num = 1; return ONE; }
-.    { printf("Unknown character: %s\n", yytext); }
+.               { printf("Unknown character: %s\n", yytext); }
+
 %%
 // section 3: user C functions (optional)
 

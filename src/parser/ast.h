@@ -88,10 +88,15 @@ struct ASTNode {
             int statement_count;
         } process;
 
-        // assignment node.... Y <= expression
-        struct {
-            char* target;       // left side signal name
-            ASTNode* expr;      // right side expression
+       struct {
+            char* target;
+            ASTNode* expr;
+            // CHIRAG 21-04-26 :: after delay support
+            // delay_ns = 0 means no delay ... schedule at delta+1 of current time
+            // delay_ns > 0 means schedule at current_time + delay_ns with delta=0
+            // this is how VHDL models propagation delay through gates
+            // Y <= A and B after 10 ns; ... output changes 10ns after input changes
+            int delay_ns;
         } assign;
 
         // if node.... if CLK = '1' then ... end if

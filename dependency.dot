@@ -1,10 +1,8 @@
 graph dependency {
     rankdir=LR;
-    label="Parallax Dependency Graph\nnodes=2  edges=1  colors=2";
+    label="Parallax Dependency Graph\nnodes=1  edges=0  colors=1";
     labelloc=t;
     fontsize=14;
     node [shape=circle, style=filled, fontsize=12];
     proc0 [label="proc0\nbatch 0", fillcolor=lightblue];
-    proc1 [label="proc1\nbatch 1", fillcolor=lightyellow];
-    proc0 -- proc1;
 }

@@ -60,7 +60,8 @@ int temp_arch_signal_count = 0;
 %token AND_TOK OR_TOK NOT_TOK XOR_TOK
 %token IF THEN SIGNAL ELSE_TOK
 %token ASSIGN
-
+%token AFTER_TOK NS_TOK
+%token <num> INTEGER
 %type <node> program entity_decl architecture_decl
 %type <node> process_decl statement signal_assignment if_statement
 %type <node> expression port_item port_list process_list statement_list
@@ -233,10 +234,24 @@ statement
 signal_assignment
     : IDENTIFIER ASSIGN expression ';'
         {
+            // CHIRAG 21-04-26 :: this part is for when no after delay ... same as before
+            // delay_ns = 0 means schedule at delta+1 of current time
             $$ = ast_new_node(NODE_ASSIGN);
             $$->data.assign.target = strdup($1);
             $$->data.assign.expr = $3;
+            $$->data.assign.delay_ns = 0;
             printf("parsed assignment: %s <=\n", $1);
+        }
+    | IDENTIFIER ASSIGN expression AFTER_TOK INTEGER NS_TOK ';'
+        {
+            // CHIRAG 21-04-26 :: this part is for when after delay is used ... Y <= A and B after 10 ns;
+            // delay_ns stores the delay value ... ast_walker uses it to schedule
+            // at current_time + delay_ns instead of current_time delta+1
+            $$ = ast_new_node(NODE_ASSIGN);
+            $$->data.assign.target = strdup($1);
+            $$->data.assign.expr = $3;
+            $$->data.assign.delay_ns = $5;
+            printf("parsed assignment with delay: %s <= after %d ns\n", $1, $5);
         }
     ;
 
