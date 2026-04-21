@@ -1,0 +1,14 @@
+# CHIRAG 21-04-26 :: traffic light FSM testbench
+# 8 clock cycles ... should see RED->GREEN->YELLOW->RED->GREEN->YELLOW->RED->GREEN
+CLK 1 1
+CLK 0 2
+CLK 1 3
+CLK 0 4
+CLK 1 5
+CLK 0 6
+CLK 1 7
+CLK 0 8
+CLK 1 9
+CLK 0 10
+CLK 1 11
+CLK 0 12

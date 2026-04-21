@@ -77,3 +77,55 @@ last updated: 13-04-26
 -- that gives enough firings to see real numbers
 -- for serious benchmarking we would need 1000s of time steps
 -- noted as future work
+
+8. PARALLEL SPEEDUP NOT OBSERVABLE ON CURRENT CIRCUITS
+   status: known limitation ... documented and explained
+   
+   PROBLEM:
+   all current circuits (and_gate, multi_and, dff, chainof4, ripple, pipeline8,
+   thirty2_channel) show parallel mode SLOWER than sequential in wall clock time.
+   this is not a bug in the parallel engine ... hash correctness proves engine works.
+   
+   ROOT CAUSE:
+   each process does 1-2 bit operations ... finishes in ~5 nanoseconds.
+   OMP thread creation and synchronization overhead is ~50 microseconds.
+   overhead is 10000x the actual work ... parallel always loses on small circuits.
+   real VHDL simulators like ModelSim model gate propagation delay which adds
+   computation time per process ... we dont have that yet.
+   
+   CIRCUITS ADDED BUT NOT YET BENCHMARKED (need speedup verification):
+   these circuits were added as mid-complexity benchmarks ... more processes and
+   more computation per process than basic gates ... but speedup not yet confirmed.
+   
+   batch 1 ... scale-up circuits:
+   - wide_and128.vhdl ... 128 independent AND gates ... 0 edges ... best case Amdahl
+   - alu16.vhdl ... 16-bit ALU ... 16 independent full adders ... realistic real-world
+   - barrel_shifter8.vhdl ... 8-bit barrel shifter ... multiple ops per process
+   
+   batch 2 ... real-world application circuits:
+   - priority_encoder8.vhdl ... interrupt controller logic ... 8 independent encoders
+   - gray_code_converter8.vhdl ... rotary encoder/ADC ... 8 independent XOR processes
+   - parity_checker16.vhdl ... ECC RAM / UART parity ... 16 partial parity processes
+   
+   CIRCUITS PROPOSED FOR REAL SPEEDUP (not yet implemented):
+   these have enough computation per process (5-8 ops each) to amortize OMP overhead.
+   
+   - hamming_encoder8.vhdl ... ECC RAM parity generation ... 4-7 XOR ops per process
+     use: error correction in RAM, satellite comms, storage systems
+   - majority_voter5.vhdl ... fault tolerant voting ... 6-8 AND/OR ops per process
+     use: spacecraft, nuclear controllers, redundant computing systems
+   - carry_lookahead_adder4.vhdl ... fast CPU addition ... 5-6 ops per process
+     use: every modern CPU ALU uses carry lookahead instead of ripple carry
+   
+   WHY THEORETICAL NUMBERS ARE STILL VALID FOR REPORT:
+   Amdahl's law output shows theoretical upper bound speedup from graph structure.
+   sequential hash == parallel hash on all 7 circuits proves engine correctness.
+   the finding that small circuits dont benefit from parallelism is itself a valid
+   result ... matches academic literature on parallel simulation overhead.
+   future work: add gate delay modeling so process execution time is non-trivial.
+   
+   WORKAROUND FOR DEMO:
+   use thirty2_channel with thirty2_channel_tb.txt ... 96 process firings ...
+   closest we have to observable speedup with current architecture.
+   
+   priority: medium ... engine is correct ... this is a performance tuning issue
