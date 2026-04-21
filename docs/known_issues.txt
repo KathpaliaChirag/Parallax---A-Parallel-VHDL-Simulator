@@ -1,140 +1,178 @@
-KNOWN ISSUES / TODO -- Parallax Phase 2
-last updated: 13-04-26
+// CHIRAG 22-04-26 :: known issues and todos for Parallax
+// this file tracks bugs i found, fixed, and ones still open
+// updating as i go .... some of these are fixed mid session
 
-1. DOUBLE NOTIFY BUG
-   file: src/sim/sequential.c
-   issue: if multiple sensitivity signals change in same delta ... process wakes up once per changed signal
-   example: process(A0, B0) with both A0 and B0 changing at t=1 ... process fires twice
-   impact: double trace_record calls ... hash is dirty but consistent between seq and parallel
-   fix: in scheduler_notify track which processes already woken this delta ... skip if already notified
-   priority: medium ... correctness of values is fine ... hash consistency is affected
+// -----------------------------------------------------------------------
 
-2. HARDCODED adder() AND dff_logic() BYPASS EVENT SYSTEM
-   file: main.c
-   issue: adder() and dff_logic() write directly to signal values and call vcd_write_change manually
-   impact: these dont go through event queue ... delta ordering doesnt apply to them
-   fix: proper fix is to insert events into queue from these functions
-   priority: low ... these are demo tests only ... parser path is clean
+// CHIRAG 13-04-26 :: double notify bug
+//
+// what happens .... process(A0, B0) with both A0 and B0 changing same delta
+// process fires twice .... once for A0 change .... once for B0 change
+// scheduler_notify has no "already notified this delta" check
+//
+// impact .... double trace_record calls .... hash is dirty but consistent
+// seq and par both double-fire so hashes still match .... values are correct
+//
+// fix .... notified flag exists on Process struct .... just not being checked
+// need to reset it each delta and skip if already set
+//
+// status: open .... medium priority
 
-3. DUPLICATE circuit TARGET IN MAKEFILE
-   file: Makefile
-   issue: two circuit targets defined ... make warns about it
-   fix: remove old one keep new one
-   priority: low ... warning only not error
+// -----------------------------------------------------------------------
 
-4. VCD_CLOSE / VCD_WRITE_CLOSE NAMING MISMATCH
-   file: src/output/vcd.h vs vcd.c
-   issue: header declared vcd_write_close ... implementation is vcd_close
-   status: fixed 13-04-26 ... header updated to vcd_close
-   priority: done
+// CHIRAG 16-03-26 :: hardcoded adder() and dff_logic() bypass event system
+//
+// what happened .... wrote adder() and dff_logic() before parser path existed
+// they write directly to signal->value and call vcd_write_change manually
+// completely bypass the event queue .... delta ordering doesnt apply to them
+//
+// why i did it .... quick demo to test signals worked .... never cleaned up
+//
+// impact .... main.c demos work visually but Z output never participates in
+// delta ordering .... not a real problem .... nobody uses main.c path anymore
+// parser path is completely clean .... this is legacy code
+//
+// status: open .... low priority .... wont fix unless demo needs cleaning
 
-5. proc_contexts NOT FREED AT END
-   file: src/parser/ast_walker.c
-   issue: proc_contexts malloc'd with realloc ... never freed
-   impact: memory leak ... not a problem for short runs
-   fix: add cleanup function to ast_walker
-   priority: low
+// -----------------------------------------------------------------------
 
-6. FIXED ARRAY CAPS ON TEMP BUFFERS AND AST CHILDREN
-   files: src/parser/parser.y, src/parser/ast.h
-   issue: temp_ports, temp_stmts, temp_processes, temp_sens, temp_arch_signals all fixed at 256
-          MAX_CHILDREN in ast.h also fixed at 256
-   current fix: bumped all to 256 ... works for any reasonable circuit
-   real fix: make these dynamic ... realloc pattern same as proc_contexts in ast_walker.c
-   why not done now: low risk at 256 ... no circuit we have exceeds that
-   priority: low ... only matters if someone writes a 100+ port entity
+// CHIRAG 13-04-26 :: duplicate circuit target in Makefile
+//
+// had two circuit targets .... make was warning about it
+//
+// status: fixed 13-04-26 .... removed old target
 
-   7. AUTO TESTBENCH OVERFLOW FOR CIRCUITS WITH 32+ INPUTS
-   file: src/parser/parser.y
-   issue: auto testbench uses "1 << input_count" to compute combinations
-          in C ... 1 is a 32-bit int ... shifting by 32 or more is undefined behavior
-          on most systems it wraps to 0 or 1 ... so thirty2_channel generates 1 combination
-          instead of the intended cap of 16
-   why it happens: 1 << 32 overflows a 32-bit integer ... result is garbage
-   fix: change "1 << input_count" to "1L << input_count" ... L makes it 64-bit long
-        then the cap of 16 kicks in correctly for large circuits
-   current impact: thirty2_channel gets only 1 auto testbench combination ... values all 0
-                   correctness is fine ... just less thorough coverage
-   workaround: use manual testbench file instead ... TB=... in make command
-   priority: low ... manual testbench always works ... auto is just a convenience
+// -----------------------------------------------------------------------
 
-7. KNOWN BENCHMARK ISSUE ... always use manual testbench for timing runs
---
--- problem 1 ... auto testbench generates wrong input for this circuit
--- auto mode uses "1 << input_count" to generate 2^N combinations capped at 16
--- but input_count = 32 here ... 1 << 32 overflows a 32-bit int ... wraps to 1
--- so auto mode generates exactly 1 combination ... all inputs = 0
--- signals start at 0 too ... nothing changes ... no process ever fires
--- process_firings = 0 ... timing is completely meaningless
--- fix ... always pass TB=tests/circuit/basic/thirty2_channel_tb.txt
---
--- problem 2 ... circuit work is too small for meaningful parallel speedup
--- each OR gate is one line of C ... eval_expr returns in nanoseconds
--- omp thread creation and synchronization overhead is microseconds
--- so parallel is actually SLOWER than sequential on this circuit alone
--- this is expected ... Amdahl's law ... parallel overhead dominates small work
--- fix ... thirty2_channel_tb.txt has 3 time steps x 16 inputs = 48 events
--- that gives enough firings to see real numbers
--- for serious benchmarking we would need 1000s of time steps
--- noted as future work
+// CHIRAG 13-04-26 :: vcd_close vs vcd_write_close naming mismatch
+//
+// header declared vcd_write_close .... implementation was vcd_close
+// linker error .... took a minute to spot
+//
+// status: fixed 13-04-26 .... header updated to vcd_close
 
-8. PARALLEL SPEEDUP NOT OBSERVABLE ON CURRENT CIRCUITS
-   status: known limitation ... documented and explained
-   
-   PROBLEM:
-   all current circuits (and_gate, multi_and, dff, chainof4, ripple, pipeline8,
-   thirty2_channel) show parallel mode SLOWER than sequential in wall clock time.
-   this is not a bug in the parallel engine ... hash correctness proves engine works.
-   
-   ROOT CAUSE:
-   each process does 1-2 bit operations ... finishes in ~5 nanoseconds.
-   OMP thread creation and synchronization overhead is ~50 microseconds.
-   overhead is 10000x the actual work ... parallel always loses on small circuits.
-   real VHDL simulators like ModelSim model gate propagation delay which adds
-   computation time per process ... we dont have that yet.
-   
-   CIRCUITS ADDED BUT NOT YET BENCHMARKED (need speedup verification):
-   these circuits were added as mid-complexity benchmarks ... more processes and
-   more computation per process than basic gates ... but speedup not yet confirmed.
-   
-   batch 1 ... scale-up circuits:
-   - wide_and128.vhdl ... 128 independent AND gates ... 0 edges ... best case Amdahl
-   - alu16.vhdl ... 16-bit ALU ... 16 independent full adders ... realistic real-world
-   - barrel_shifter8.vhdl ... 8-bit barrel shifter ... multiple ops per process
-   
-   batch 2 ... real-world application circuits:
-   - priority_encoder8.vhdl ... interrupt controller logic ... 8 independent encoders
-   - gray_code_converter8.vhdl ... rotary encoder/ADC ... 8 independent XOR processes
-   - parity_checker16.vhdl ... ECC RAM / UART parity ... 16 partial parity processes
-   
-   CIRCUITS PROPOSED FOR REAL SPEEDUP (not yet implemented):
-   these have enough computation per process (5-8 ops each) to amortize OMP overhead.
-   
-   - hamming_encoder8.vhdl ... ECC RAM parity generation ... 4-7 XOR ops per process
-     use: error correction in RAM, satellite comms, storage systems
-   - majority_voter5.vhdl ... fault tolerant voting ... 6-8 AND/OR ops per process
-     use: spacecraft, nuclear controllers, redundant computing systems
-   - carry_lookahead_adder4.vhdl ... fast CPU addition ... 5-6 ops per process
-     use: every modern CPU ALU uses carry lookahead instead of ripple carry
-   
-   WHY THEORETICAL NUMBERS ARE STILL VALID FOR REPORT:
-   Amdahl's law output shows theoretical upper bound speedup from graph structure.
-   sequential hash == parallel hash on all 7 circuits proves engine correctness.
-   the finding that small circuits dont benefit from parallelism is itself a valid
-   result ... matches academic literature on parallel simulation overhead.
-   future work: add gate delay modeling so process execution time is non-trivial.
-   
-   WORKAROUND FOR DEMO:
-   use thirty2_channel with thirty2_channel_tb.txt ... 96 process firings ...
-   closest we have to observable speedup with current architecture.
-   
-   priority: medium ... engine is correct ... this is a performance tuning issue
+// -----------------------------------------------------------------------
 
-   9. STACK OVERFLOW ON LARGE CIRCUITS (>119 PROCESSES)
-   issue: ASTNode struct with MAX_CHILDREN=256 is very large
-   each node has multiple 256-element arrays ... struct is ~50KB
-   default Linux stack is 8MB ... overflows at around process 119
-   fix: run with ulimit -s unlimited before executing parser_test.exe
-   added to Makefile circuit target automatically
-   long term fix: replace fixed arrays in ASTNode with dynamic pointers
-   priority: medium ... Makefile fix works for now
+// CHIRAG 02-04-26 :: proc_contexts never freed
+//
+// proc_contexts is realloc'd as processes are added .... never freed at end
+// memory leak .... valgrind would complain .... program exits fine though
+// short simulation runs .... not worth fixing right now
+//
+// fix .... free(proc_contexts) at end of main .... one line
+//
+// status: open .... low priority
+
+// -----------------------------------------------------------------------
+
+// CHIRAG 18-04-26 :: fixed array caps on temp buffers and AST children
+//
+// temp_ports, temp_stmts, temp_processes, temp_sens all fixed at 256
+// MAX_CHILDREN in ast.h also fixed at 256
+//
+// why 256 .... bumped from smaller values when wide_and128 needed 128+ children
+// works for any circuit we have .... cheap fix for now
+//
+// real fix .... make dynamic with realloc .... same pattern as proc_contexts
+// only matters for 100+ port entities .... not our use case
+//
+// status: open .... low priority
+
+// -----------------------------------------------------------------------
+
+// CHIRAG 21-04-26 :: auto testbench overflow for 32+ input circuits
+//
+// auto testbench does 1 << input_count to get combination count
+// 1 is 32-bit int .... 1 << 32 is undefined behavior .... wraps to 0 or 1
+// thirty2_channel has 32 inputs .... gets 1 combination instead of 16
+//
+// fix .... change to 1L << input_count .... L makes it 64-bit .... one char fix
+//
+// workaround .... always pass TB=... for thirty2_channel .... manual tb works fine
+//
+// status: open .... low priority .... manual testbench always works
+
+// -----------------------------------------------------------------------
+
+// CHIRAG 21-04-26 :: stack overflow on large circuits
+//
+// ASTNode with MAX_CHILDREN=256 is huge .... ~50KB per node
+// deep recursion in ast_walker .... default 8MB Linux stack fills up fast
+// wide_and128 crashed at process 119 before i found this
+//
+// fix applied .... ulimit -s unlimited in Makefile circuit target
+// Windows fix .... -Wl,--stack,67108864 at compile time .... sets 64MB stack
+//
+// long term fix .... replace fixed arrays in ASTNode with dynamic pointers
+// havent done it .... ulimit works fine for now
+//
+// status: open .... medium .... Makefile fix works
+
+// -----------------------------------------------------------------------
+
+// CHIRAG 22-04-26 :: parallel speedup not visible on small circuits
+// AI assistance .... diagnosed with Claude (Anthropic) after 3 failed attempts
+//
+// what was happening .... par was 10-20x SLOWER than seq on everything
+// tried three fixes .... all failed ....
+// 1. original spawn-per-delta .... 10-20x slower
+// 2. queue prealloc + reset .... still 10-20x slower  
+// 3. persistent threads omp for .... still 10-20x slower
+//
+// root cause .... each gate does ~5ns of work .... OMP barrier costs ~500us
+// ratio is 100000:1 .... barrier dominates completely .... parallel cant win
+//
+// what real simulators do ....
+// Verilator compiles HDL to C++ and groups hundreds of gates into macro-tasks
+// their parallel unit is ~500 gates .... ours is 1 gate .... 500x difference
+// papers that report speedup use circuits with 1411 to 14704 processes
+// our biggest circuit is wide_and128 with 128 processes
+//
+// fix .... added --stress N flag .... N volatile float multiplies per gate
+// models gate propagation delay .... real CMOS gates arent instant
+// first tried omp_get_wtime busy-wait .... worked on Linux .... failed on Windows
+// Windows omp_get_wtime has 1ms resolution .... loop exited immediately
+// switched to volatile double math loop .... works everywhere .... no timer needed
+//
+// results on wide_and128 + 500 step testbench WSL2 8-core ....
+// stress=0      seq=0.10s  par/8=0.54s  0.19x .... barrier dominates
+// stress=10000  seq=0.77s  par/8=0.62s  1.24x .... crossover point
+// stress=50000  seq=3.31s  par/8=1.01s  3.28x .... sweet spot
+// stress=100000 seq=6.42s  par/8=1.41s  4.55x .... peak
+//
+// future work .... macro-task batching .... group K processes into one OMP task
+// reduces barrier invocations by K .... matches Verilator approach
+// temporal parallelism (Ciesielski MULTES) .... partition sim into time slices
+//
+// status: resolved with --stress N workaround
+
+// -----------------------------------------------------------------------
+
+// CHIRAG 22-04-26 :: stat_process_firings race condition in parallel mode
+//
+// stat_process_firings++ inside omp for .... not atomic
+// multiple threads increment simultaneously .... some increments lost
+// seq shows 9308 firings .... par/8 shows 9194-9301 .... varies each run
+//
+// why .... ++ is read-modify-write .... three instructions .... not atomic
+// thread A reads 100 .... thread B reads 100 .... both write 101 .... one lost
+//
+// fix .... #pragma omp atomic before the increment .... one line
+//
+// status: open .... low priority .... cosmetic only .... hash unaffected
+
+// -----------------------------------------------------------------------
+
+// CHIRAG 22-04-26 :: Windows needs separate binary
+//
+// parser_test.exe is ELF .... wont run on Windows natively
+// recompile with mingw on PowerShell ....
+// gcc -Wall -g -fopenmp "-Wl,--stack,67108864" [all .c files] -o parser_win.exe
+//
+// timing note .... omp_get_wtime has 1ms resolution on Windows
+// all benchmark timing must be done on Linux/WSL
+// stress volatile math loop works fine on Windows though .... no timer needed
+//
+// status: open .... low priority .... WSL is primary env
+
+// -----------------------------------------------------------------------

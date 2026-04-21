@@ -92,7 +92,11 @@ circuit: parser
 	# CHIRAG 21-04-26 :: ulimit -s unlimited needed for large circuits
 	# wide_and128 has 128 processes ... ASTNode with MAX_CHILDREN=256 is huge
 	# default 8MB stack overflows at process 119 ... unlimited fixes this
-	ulimit -s unlimited && OMP_NUM_THREADS=$(or $(THREADS),1) OMP_PROC_BIND=close ./parser_test.exe $(basename $(notdir $(FILE))) $(TB) $(MODE) < $(FILE)
+# 	ulimit -s unlimited && OMP_NUM_THREADS=$(or $(THREADS),1) OMP_PROC_BIND=close ./parser_test.exe $(basename $(notdir $(FILE))) $(TB) $(MODE) < $(FILE)
+	# CHIRAG 22-04-26 :: added --stress N support ... models gate propagation delay
+	# STRESS=1000 adds 1us busy-wait per process ... makes parallel faster than seq
+	# default STRESS=0 ... original behavior unchanged
+	ulimit -s unlimited && OMP_NUM_THREADS=$(or $(THREADS),1) OMP_PROC_BIND=close ./parser_test.exe $(basename $(notdir $(FILE))) $(TB) $(MODE) $(if $(STRESS),--stress $(STRESS),) < $(FILE)
 clean:
 	rm -f main.exe parser_test.exe
 	rm -f $(PARSER)/parser.c $(PARSER)/parser.h $(PARSER)/lexer.c

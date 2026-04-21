@@ -1,0 +1,864 @@
+========================================
+CIRCUIT=traffic_light  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.000182067 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=1 : simulation time: 0.000301177 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=2 : simulation time: 0.000764288 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=4 : simulation time: 0.001089073 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=8 : simulation time: 0.001733506 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+
+========================================
+CIRCUIT=traffic_light  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.001311632 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=1 : simulation time: 0.001587222 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=2 : simulation time: 0.001907604 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=4 : simulation time: 0.002474670 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=8 : simulation time: 0.003135018 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+
+========================================
+CIRCUIT=traffic_light  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 0.006269135 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=1 : simulation time: 0.006330654 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=2 : simulation time: 0.006662922 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=4 : simulation time: 0.007299806 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=8 : simulation time: 0.007934910 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+
+========================================
+CIRCUIT=traffic_light  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 0.012251380 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=1 : simulation time: 0.012464857 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=2 : simulation time: 0.012662375 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=4 : simulation time: 0.013406473 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+  PAR T=8 : simulation time: 0.013866956 seconds
+trace hash: 2957170177
+total delta cycles    : 24
+total process firings : 18
+
+========================================
+CIRCUIT=dff  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.000031392 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=1 : simulation time: 0.000118362 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=2 : simulation time: 0.000429250 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=4 : simulation time: 0.000926275 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=8 : simulation time: 0.001272442 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+
+========================================
+CIRCUIT=dff  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.000638401 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=1 : simulation time: 0.000775237 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=2 : simulation time: 0.001139262 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=4 : simulation time: 0.001798779 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=8 : simulation time: 0.002134230 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+
+========================================
+CIRCUIT=dff  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 0.003065664 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=1 : simulation time: 0.003131565 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=2 : simulation time: 0.003616035 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=4 : simulation time: 0.003807647 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=8 : simulation time: 0.004515203 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+
+========================================
+CIRCUIT=dff  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 0.006170721 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=1 : simulation time: 0.006278143 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=2 : simulation time: 0.006478309 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=4 : simulation time: 0.006885419 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+  PAR T=8 : simulation time: 0.007799373 seconds
+trace hash: 3702914041
+total delta cycles    : 12
+total process firings : 9
+
+========================================
+CIRCUIT=multi_and  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.000066722 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=1 : simulation time: 0.000126016 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=2 : simulation time: 0.000423621 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=4 : simulation time: 0.000848380 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=8 : simulation time: 0.001334106 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+
+========================================
+CIRCUIT=multi_and  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.000261129 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=1 : simulation time: 0.000374436 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=2 : simulation time: 0.000561585 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=4 : simulation time: 0.000948520 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=8 : simulation time: 0.001705855 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+
+========================================
+CIRCUIT=multi_and  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 0.001170926 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=1 : simulation time: 0.001109460 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=2 : simulation time: 0.001083389 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=4 : simulation time: 0.001520294 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=8 : simulation time: 0.002553178 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+
+========================================
+CIRCUIT=multi_and  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 0.002092942 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=1 : simulation time: 0.002109298 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=2 : simulation time: 0.001810913 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=4 : simulation time: 0.002588538 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+  PAR T=8 : simulation time: 0.002979270 seconds
+trace hash: 3198782091
+total delta cycles    : 5
+total process firings : 3
+
+========================================
+CIRCUIT=chainof4  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.000086466 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=1 : simulation time: 0.000193970 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=2 : simulation time: 0.000536810 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=4 : simulation time: 0.001041841 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=8 : simulation time: 0.001730724 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+
+========================================
+CIRCUIT=chainof4  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.000874004 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=1 : simulation time: 0.001077601 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=2 : simulation time: 0.001273036 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=4 : simulation time: 0.001914296 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=8 : simulation time: 0.002669838 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+
+========================================
+CIRCUIT=chainof4  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 0.004167517 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=1 : simulation time: 0.004295934 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=2 : simulation time: 0.004760233 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=4 : simulation time: 0.005300225 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=8 : simulation time: 0.005936955 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+
+========================================
+CIRCUIT=chainof4  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 0.008331277 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=1 : simulation time: 0.008573548 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=2 : simulation time: 0.008593993 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=4 : simulation time: 0.009213590 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+  PAR T=8 : simulation time: 0.010237041 seconds
+trace hash: 749744446
+total delta cycles    : 15
+total process firings : 12
+
+========================================
+CIRCUIT=thirty2_channel  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.000623108 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=1 : simulation time: 0.000685865 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=2 : simulation time: 0.006785347 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=4 : simulation time: 0.007305557 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 95
+  PAR T=8 : simulation time: 0.002760152 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 92
+
+========================================
+CIRCUIT=thirty2_channel  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.007216819 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=1 : simulation time: 0.007262038 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=2 : simulation time: 0.004326460 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=4 : simulation time: 0.003058111 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 95
+  PAR T=8 : simulation time: 0.006830536 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+
+========================================
+CIRCUIT=thirty2_channel  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 0.033500716 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=1 : simulation time: 0.033816663 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=2 : simulation time: 0.018553883 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=4 : simulation time: 0.009665128 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=8 : simulation time: 0.013382353 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+
+========================================
+CIRCUIT=thirty2_channel  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 0.065249206 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=1 : simulation time: 0.065819684 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=2 : simulation time: 0.034369977 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=4 : simulation time: 0.021056941 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+  PAR T=8 : simulation time: 0.010993832 seconds
+trace hash: 1666589379
+total delta cycles    : 4
+total process firings : 96
+
+========================================
+CIRCUIT=pipeline8  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.000062664 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=1 : simulation time: 0.000213204 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=2 : simulation time: 0.000591536 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=4 : simulation time: 0.001037704 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=8 : simulation time: 0.002017947 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+
+========================================
+CIRCUIT=pipeline8  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.001702068 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=1 : simulation time: 0.001852223 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=2 : simulation time: 0.002225420 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=4 : simulation time: 0.002897466 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=8 : simulation time: 0.003947917 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+
+========================================
+CIRCUIT=pipeline8  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 0.008047623 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=1 : simulation time: 0.008285560 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=2 : simulation time: 0.008640865 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=4 : simulation time: 0.009210969 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=8 : simulation time: 0.010612400 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+
+========================================
+CIRCUIT=pipeline8  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 0.016316427 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=1 : simulation time: 0.016857519 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=2 : simulation time: 0.016890197 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=4 : simulation time: 0.017235587 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+  PAR T=8 : simulation time: 0.018235705 seconds
+trace hash: 3424237402
+total delta cycles    : 27
+total process firings : 24
+
+========================================
+CIRCUIT=eight_channel  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.000052021 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=1 : simulation time: 0.000135919 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=2 : simulation time: 0.000581776 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=4 : simulation time: 0.000851432 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=8 : simulation time: 0.001698014 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+
+========================================
+CIRCUIT=eight_channel  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.000448879 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=1 : simulation time: 0.000533858 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=2 : simulation time: 0.000732307 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=4 : simulation time: 0.001110759 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=8 : simulation time: 0.002219430 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+
+========================================
+CIRCUIT=eight_channel  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 0.002063691 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=1 : simulation time: 0.002189907 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=2 : simulation time: 0.001976413 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=4 : simulation time: 0.002219840 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=8 : simulation time: 0.003082406 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+
+========================================
+CIRCUIT=eight_channel  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 0.004138716 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=1 : simulation time: 0.004240367 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=2 : simulation time: 0.003183735 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=4 : simulation time: 0.003728130 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+  PAR T=8 : simulation time: 0.004553958 seconds
+trace hash: 844848091
+total delta cycles    : 8
+total process firings : 6
+
+========================================
+CIRCUIT=ripple  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.000027859 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=1 : simulation time: 0.000075600 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=2 : simulation time: 0.000504292 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=4 : simulation time: 0.001138897 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=8 : simulation time: 0.001488603 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+
+========================================
+CIRCUIT=ripple  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.000227936 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=1 : simulation time: 0.000339060 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=2 : simulation time: 0.000793853 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=4 : simulation time: 0.000986554 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=8 : simulation time: 0.001747574 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+
+========================================
+CIRCUIT=ripple  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 0.001015509 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=1 : simulation time: 0.001084798 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=2 : simulation time: 0.001431282 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=4 : simulation time: 0.001886779 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=8 : simulation time: 0.002564951 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+
+========================================
+CIRCUIT=ripple  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 0.002046672 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=1 : simulation time: 0.002120436 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=2 : simulation time: 0.002484693 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=4 : simulation time: 0.003128897 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+  PAR T=8 : simulation time: 0.003564630 seconds
+trace hash: 342984039
+total delta cycles    : 5
+total process firings : 3
+
+========================================
+CIRCUIT=wide_and128  STRESS=0
+========================================
+  SEQ T=1 : simulation time: 0.111659641 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=1 : simulation time: 0.483154036 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=2 : simulation time: 0.493765691 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9296
+  PAR T=4 : simulation time: 0.491213126 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9258
+  PAR T=8 : simulation time: 0.590283163 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9218
+
+========================================
+CIRCUIT=wide_and128  STRESS=10000
+========================================
+  SEQ T=1 : simulation time: 0.745431614 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=1 : simulation time: 1.184818123 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=2 : simulation time: 0.807626177 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9302
+  PAR T=4 : simulation time: 0.644727756 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9285
+  PAR T=8 : simulation time: 0.998014403 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9269
+
+========================================
+CIRCUIT=wide_and128  STRESS=50000
+========================================
+  SEQ T=1 : simulation time: 3.318443096 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=1 : simulation time: 3.639382691 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=2 : simulation time: 2.056080730 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9304
+  PAR T=4 : simulation time: 1.304372746 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9292
+  PAR T=8 : simulation time: 0.993900296 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9269
+
+========================================
+CIRCUIT=wide_and128  STRESS=100000
+========================================
+  SEQ T=1 : simulation time: 6.453310123 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=1 : simulation time: 6.871153557 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=2 : simulation time: 3.722376763 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9308
+  PAR T=4 : simulation time: 2.221995445 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9296
+  PAR T=8 : simulation time: 1.639678551 seconds
+trace hash: 1047282184
+total delta cycles    : 946
+total process firings : 9293
+

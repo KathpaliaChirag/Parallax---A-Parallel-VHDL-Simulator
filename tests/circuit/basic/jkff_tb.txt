@@ -1,0 +1,38 @@
+# CHIRAG 22-04-26 :: JKFF testbench
+# test all four JK combinations
+
+# J=0 K=0 ... hold ... Q stays 0
+J 0 1
+K 0 1
+CLK 1 2
+CLK 0 3
+
+# J=1 K=0 ... set ... Q goes to 1
+J 1 4
+K 0 4
+CLK 1 5
+CLK 0 6
+
+# J=0 K=0 ... hold ... Q stays 1
+J 0 7
+K 0 7
+CLK 1 8
+CLK 0 9
+
+# J=0 K=1 ... reset ... Q goes to 0
+J 0 10
+K 1 10
+CLK 1 11
+CLK 0 12
+
+# J=1 K=1 ... toggle ... Q goes to 1
+J 1 13
+K 1 13
+CLK 1 14
+CLK 0 15
+
+# J=1 K=1 ... toggle again ... Q goes to 0
+J 1 16
+K 1 16
+CLK 1 17
+CLK 0 18

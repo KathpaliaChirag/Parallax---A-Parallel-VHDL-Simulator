@@ -1,0 +1,1307 @@
+$timescale 1ns $end
+$var wire 1 ! A0 $end
+$var wire 1 " A1 $end
+$var wire 1 # A2 $end
+$var wire 1 $ A3 $end
+$var wire 1 % A4 $end
+$var wire 1 & A5 $end
+$var wire 1 ' A6 $end
+$var wire 1 ( A7 $end
+$var wire 1 ) A8 $end
+$var wire 1 * A9 $end
+$var wire 1 + A10 $end
+$var wire 1 , A11 $end
+$var wire 1 - A12 $end
+$var wire 1 . A13 $end
+$var wire 1 / A14 $end
+$var wire 1 0 A15 $end
+$var wire 1 1 A16 $end
+$var wire 1 2 A17 $end
+$var wire 1 3 A18 $end
+$var wire 1 4 A19 $end
+$var wire 1 5 A20 $end
+$var wire 1 6 A21 $end
+$var wire 1 7 A22 $end
+$var wire 1 8 A23 $end
+$var wire 1 9 A24 $end
+$var wire 1 : A25 $end
+$var wire 1 ; A26 $end
+$var wire 1 < A27 $end
+$var wire 1 = A28 $end
+$var wire 1 > A29 $end
+$var wire 1 ? A30 $end
+$var wire 1 @ A31 $end
+$var wire 1 A B0 $end
+$var wire 1 B B1 $end
+$var wire 1 C B2 $end
+$var wire 1 D B3 $end
+$var wire 1 E B4 $end
+$var wire 1 F B5 $end
+$var wire 1 G B6 $end
+$var wire 1 H B7 $end
+$var wire 1 I B8 $end
+$var wire 1 J B9 $end
+$var wire 1 K B10 $end
+$var wire 1 L B11 $end
+$var wire 1 M B12 $end
+$var wire 1 N B13 $end
+$var wire 1 O B14 $end
+$var wire 1 P B15 $end
+$var wire 1 Q B16 $end
+$var wire 1 R B17 $end
+$var wire 1 S B18 $end
+$var wire 1 T B19 $end
+$var wire 1 U B20 $end
+$var wire 1 V B21 $end
+$var wire 1 W B22 $end
+$var wire 1 X B23 $end
+$var wire 1 Y B24 $end
+$var wire 1 Z B25 $end
+$var wire 1 [ B26 $end
+$var wire 1 \ B27 $end
+$var wire 1 ] B28 $end
+$var wire 1 ^ B29 $end
+$var wire 1 _ B30 $end
+$var wire 1 ` B31 $end
+$var wire 1 a Cin $end
+$var wire 1 b S0 $end
+$var wire 1 c S1 $end
+$var wire 1 d S2 $end
+$var wire 1 e S3 $end
+$var wire 1 f S4 $end
+$var wire 1 g S5 $end
+$var wire 1 h S6 $end
+$var wire 1 i S7 $end
+$var wire 1 j S8 $end
+$var wire 1 k S9 $end
+$var wire 1 l S10 $end
+$var wire 1 m S11 $end
+$var wire 1 n S12 $end
+$var wire 1 o S13 $end
+$var wire 1 p S14 $end
+$var wire 1 q S15 $end
+$var wire 1 r S16 $end
+$var wire 1 s S17 $end
+$var wire 1 t S18 $end
+$var wire 1 u S19 $end
+$var wire 1 v S20 $end
+$var wire 1 w S21 $end
+$var wire 1 x S22 $end
+$var wire 1 y S23 $end
+$var wire 1 z S24 $end
+$var wire 1 { S25 $end
+$var wire 1 | S26 $end
+$var wire 1 } S27 $end
+$var wire 1 ~ S28 $end
+$var wire 1  S29 $end
+$var wire 1 € S30 $end
+$var wire 1  S31 $end
+$var wire 1 ‚ Cout $end
+$var wire 1 ƒ G0 $end
+$var wire 1 „ G1 $end
+$var wire 1 … G2 $end
+$var wire 1 † G3 $end
+$var wire 1 ‡ G4 $end
+$var wire 1 ˆ G5 $end
+$var wire 1 ‰ G6 $end
+$var wire 1 Š G7 $end
+$var wire 1 ‹ G8 $end
+$var wire 1 Œ G9 $end
+$var wire 1  G10 $end
+$var wire 1  G11 $end
+$var wire 1  G12 $end
+$var wire 1  G13 $end
+$var wire 1 ‘ G14 $end
+$var wire 1 ’ G15 $end
+$var wire 1 “ G16 $end
+$var wire 1 ” G17 $end
+$var wire 1 • G18 $end
+$var wire 1 – G19 $end
+$var wire 1 — G20 $end
+$var wire 1 ˜ G21 $end
+$var wire 1 ™ G22 $end
+$var wire 1 š G23 $end
+$var wire 1 › G24 $end
+$var wire 1 œ G25 $end
+$var wire 1  G26 $end
+$var wire 1  G27 $end
+$var wire 1 Ÿ G28 $end
+$var wire 1   G29 $end
+$var wire 1 ¡ G30 $end
+$var wire 1 ¢ G31 $end
+$var wire 1 £ P0 $end
+$var wire 1 ¤ P1 $end
+$var wire 1 ¥ P2 $end
+$var wire 1 ¦ P3 $end
+$var wire 1 § P4 $end
+$var wire 1 ¨ P5 $end
+$var wire 1 © P6 $end
+$var wire 1 ª P7 $end
+$var wire 1 « P8 $end
+$var wire 1 ¬ P9 $end
+$var wire 1 ­ P10 $end
+$var wire 1 ® P11 $end
+$var wire 1 ¯ P12 $end
+$var wire 1 ° P13 $end
+$var wire 1 ± P14 $end
+$var wire 1 ² P15 $end
+$var wire 1 ³ P16 $end
+$var wire 1 ´ P17 $end
+$var wire 1 µ P18 $end
+$var wire 1 ¶ P19 $end
+$var wire 1 · P20 $end
+$var wire 1 ¸ P21 $end
+$var wire 1 ¹ P22 $end
+$var wire 1 º P23 $end
+$var wire 1 » P24 $end
+$var wire 1 ¼ P25 $end
+$var wire 1 ½ P26 $end
+$var wire 1 ¾ P27 $end
+$var wire 1 ¿ P28 $end
+$var wire 1 À P29 $end
+$var wire 1 Á P30 $end
+$var wire 1 Â P31 $end
+$var wire 1 Ã C1 $end
+$var wire 1 Ä C2 $end
+$var wire 1 Å C3 $end
+$var wire 1 Æ C4 $end
+$var wire 1 Ç C5 $end
+$var wire 1 È C6 $end
+$var wire 1 É C7 $end
+$var wire 1 Ê C8 $end
+$var wire 1 Ë C9 $end
+$var wire 1 Ì C10 $end
+$var wire 1 Í C11 $end
+$var wire 1 Î C12 $end
+$var wire 1 Ï C13 $end
+$var wire 1 Ğ C14 $end
+$var wire 1 Ñ C15 $end
+$var wire 1 Ò C16 $end
+$var wire 1 Ó C17 $end
+$var wire 1 Ô C18 $end
+$var wire 1 Õ C19 $end
+$var wire 1 Ö C20 $end
+$var wire 1 × C21 $end
+$var wire 1 Ø C22 $end
+$var wire 1 Ù C23 $end
+$var wire 1 Ú C24 $end
+$var wire 1 Û C25 $end
+$var wire 1 Ü C26 $end
+$var wire 1 İ C27 $end
+$var wire 1 Ş C28 $end
+$var wire 1 ß C29 $end
+$var wire 1 à C30 $end
+$var wire 1 á C31 $end
+$dumpvars
+0!
+0"
+0#
+0$
+0%
+0&
+0'
+0(
+0)
+0*
+0+
+0,
+0-
+0.
+0/
+00
+01
+02
+03
+04
+05
+06
+07
+08
+09
+0:
+0;
+0<
+0=
+0>
+0?
+0@
+0A
+0B
+0C
+0D
+0E
+0F
+0G
+0H
+0I
+0J
+0K
+0L
+0M
+0N
+0O
+0P
+0Q
+0R
+0S
+0T
+0U
+0V
+0W
+0X
+0Y
+0Z
+0[
+0\
+0]
+0^
+0_
+0`
+0a
+0b
+0c
+0d
+0e
+0f
+0g
+0h
+0i
+0j
+0k
+0l
+0m
+0n
+0o
+0p
+0q
+0r
+0s
+0t
+0u
+0v
+0w
+0x
+0y
+0z
+0{
+0|
+0}
+0~
+0
+0€
+0
+0‚
+0ƒ
+0„
+0…
+0†
+0‡
+0ˆ
+0‰
+0Š
+0‹
+0Œ
+0
+0
+0
+0
+0‘
+0’
+0“
+0”
+0•
+0–
+0—
+0˜
+0™
+0š
+0›
+0œ
+0
+0
+0Ÿ
+0 
+0¡
+0¢
+0£
+0¤
+0¥
+0¦
+0§
+0¨
+0©
+0ª
+0«
+0¬
+0­
+0®
+0¯
+0°
+0±
+0²
+0³
+0´
+0µ
+0¶
+0·
+0¸
+0¹
+0º
+0»
+0¼
+0½
+0¾
+0¿
+0À
+0Á
+0Â
+0Ã
+0Ä
+0Å
+0Æ
+0Ç
+0È
+0É
+0Ê
+0Ë
+0Ì
+0Í
+0Î
+0Ï
+0Ğ
+0Ñ
+0Ò
+0Ó
+0Ô
+0Õ
+0Ö
+0×
+0Ø
+0Ù
+0Ú
+0Û
+0Ü
+0İ
+0Ş
+0ß
+0à
+0á
+$end
+#1
+0!
+#1
+0"
+#1
+0$
+#1
+0(
+#1
+00
+#1
+0@
+#1
+0`
+#1
+0a
+#1
+0A
+#1
+01
+#1
+0B
+#1
+0C
+#1
+0)
+#1
+02
+#1
+0D
+#1
+0E
+#1
+03
+#1
+0F
+#1
+0G
+#1
+0%
+#1
+0*
+#1
+04
+#1
+0H
+#1
+0I
+#1
+05
+#1
+0J
+#1
+0K
+#1
+0+
+#1
+06
+#1
+0L
+#1
+0M
+#1
+07
+#1
+0N
+#1
+0O
+#1
+0#
+#1
+0&
+#1
+0,
+#1
+08
+#1
+0P
+#1
+0Q
+#1
+09
+#1
+0R
+#1
+0S
+#1
+0-
+#1
+0:
+#1
+0T
+#1
+0U
+#1
+0;
+#1
+0V
+#1
+0W
+#1
+0'
+#1
+0.
+#1
+0<
+#1
+0X
+#1
+0Y
+#1
+0=
+#1
+0Z
+#1
+0[
+#1
+0/
+#1
+0>
+#1
+0\
+#1
+0]
+#1
+0?
+#1
+0^
+#1
+0_
+#1
+0«
+#1
+0º
+#1
+0¤
+#1
+0¼
+#1
+0µ
+#1
+0§
+#1
+0¶
+#1
+0¨
+#1
+0½
+#1
+0¥
+#1
+0À
+#1
+0¾
+#1
+0°
+#1
+0¹
+#1
+0¯
+#1
+0Â
+#1
+0²
+#1
+0Á
+#1
+0©
+#1
+0¸
+#1
+0ª
+#1
+0»
+#1
+0ƒ
+#1
+0¬
+#1
+0·
+#1
+0­
+#1
+0³
+#1
+0´
+#1
+0¦
+#1
+0±
+#1
+0®
+#1
+0¿
+#1
+0h
+#1
+0~
+#1
+0t
+#1
+0|
+#1
+0l
+#1
+0g
+#1
+0
+#1
+0w
+#1
+0o
+#1
+0j
+#1
+0{
+#1
+0
+#1
+0s
+#1
+0c
+#1
+0z
+#1
+0r
+#1
+0i
+#1
+0d
+#1
+0Ã
+#1
+0€
+#1
+0x
+#1
+0p
+#1
+0k
+#1
+0y
+#1
+0q
+#1
+0f
+#1
+0}
+#1
+0v
+#1
+0n
+#1
+0e
+#1
+0u
+#1
+0m
+#1
+1c
+#1
+0Ä
+#1
+1d
+#1
+0Å
+#1
+1e
+#1
+0Æ
+#1
+1f
+#1
+0Ç
+#1
+0È
+#1
+1g
+#1
+0É
+#1
+1h
+#1
+1i
+#1
+0Ê
+#1
+1j
+#1
+0Ë
+#1
+0Ì
+#1
+1k
+#1
+0Í
+#1
+1l
+#1
+0Î
+#1
+1m
+#1
+1n
+#1
+0Ï
+#1
+0Ğ
+#1
+1o
+#1
+0Ñ
+#1
+1p
+#1
+0Ò
+#1
+1q
+#1
+0Ó
+#1
+1r
+#1
+0Ô
+#1
+1s
+#1
+1t
+#1
+0Õ
+#1
+0Ö
+#1
+1u
+#1
+1v
+#1
+0×
+#1
+1w
+#1
+0Ø
+#1
+1x
+#1
+0Ù
+#1
+0Ú
+#1
+1y
+#1
+0Û
+#1
+1z
+#1
+1{
+#1
+0Ü
+#1
+1|
+#1
+0İ
+#1
+0Ş
+#1
+1}
+#1
+0ß
+#1
+1~
+#1
+1
+#1
+0à
+#1
+1€
+#1
+0á
+#1
+1
+#1
+0‚
+#2
+0:
+#2
+1+
+#2
+1F
+#2
+1?
+#2
+15
+#2
+0U
+#2
+1Z
+#2
+1!
+#2
+0a
+#2
+00
+#2
+0K
+#2
+1A
+#2
+0&
+#2
+1P
+#2
+0_
+#2
+0b
+#2
+1ƒ
+#2
+1Ã
+#2
+1Ä
+#2
+0c
+#2
+0d
+#2
+1Å
+#2
+0e
+#2
+1Æ
+#2
+1Ç
+#2
+0f
+#2
+1È
+#2
+0g
+#2
+1É
+#2
+0h
+#2
+1Ê
+#2
+0i
+#2
+0j
+#2
+1Ë
+#2
+0k
+#2
+1Ì
+#2
+1Í
+#2
+0l
+#2
+0m
+#2
+1Î
+#2
+1Ï
+#2
+0n
+#2
+0o
+#2
+1Ğ
+#2
+1Ñ
+#2
+0p
+#2
+1Ò
+#2
+0q
+#2
+0r
+#2
+1Ó
+#2
+1Ô
+#2
+0s
+#2
+1Õ
+#2
+0t
+#2
+0u
+#2
+1Ö
+#2
+0v
+#2
+1×
+#2
+1Ø
+#2
+0w
+#2
+0x
+#2
+1Ù
+#2
+1Ú
+#2
+0y
+#2
+1Û
+#2
+0z
+#2
+0{
+#2
+1Ü
+#2
+1İ
+#2
+0|
+#2
+0}
+#2
+1Ş
+#2
+0~
+#2
+1ß
+#2
+1à
+#2
+0
+#2
+1á
+#2
+0€
+#2
+1‚
+#2
+0
+#3
+0Q
+#3
+0G
+#3
+06
+#3
+1`
+#3
+1;
+#3
+1L
+#3
+1B
+#3
+0[
+#3
+1V
+#3
+1'
+#3
+0@
+#3
+0"
+#3
+11
+#3
+0,
+#4
+08
+#4
+10
+#4
+0A
+#4
+0I
+#4
+04
+#4
+0<
+#4
+1a
+#4
+0!
+#4
+0Y
+#4
+1,
+#4
+1@
+#4
+0M
+#4
+0]
+#4
+1Q
+#4
+0$
+#4
+0(
+#4
+1U
+#4
+0E
+#4
+0‹
+#4
+1b
+#4
+0›
+#4
+1º
+#4
+0Š
+#4
+1¾
+#4
+1¦
+#4
+1»
+#4
+0–
+#4
+1«
+#4
+0†
+#4
+0ƒ
+#4
+0š
+#4
+0
+#4
+1ª
+#4
+1·
+#4
+1¶
+#4
+0Æ
+#4
+1y
+#4
+1j
+#4
+0Ã
+#4
+0Û
+#4
+1}
+#4
+0Ê
+#4
+1z
+#4
+1e
+#4
+1u
+#4
+0Ş
+#4
+1v
+#4
+0Ö
+#4
+0Ú
+#4
+1i
+#4
+0Ë
+#4
+0Ü
+#4
+0Ì
+#4
+0v
+#4
+1{
+#4
+1c
+#4
+0Ä
+#4
+0ß
+#4
+0j
+#4
+1~
+#4
+0z
+#4
+1k
+#4
+0Ç
+#4
+1f
+#4
+0È
+#4
+0Í
+#4
+1|
+#4
+1d
+#4
+1
+#4
+0Å
+#4
+0à
+#4
+1g
+#4
+0İ
+#4
+1l
+#4
+1€
+#4
+1h
+#4
+0É
+#4
+1m
+#4
+0Î
+#4
+0e
+#4
+0á
+#4
+0}
+#4
+1n
+#4
+0‚
+#4
+1
+#4
+0i
+#4
+0Ï
+#4
+1o
+#4
+0Ğ
+#4
+0Ñ
+#4
+1p
+#4
+0Ò
+#4
+1q
+#4
+1r
+#4
+0Ó
+#4
+1s
+#4
+0Ô
+#4
+0Õ
+#4
+1t
+#4
+0u
+#5
+1!
+#5
+0B
+#5
+1A
+#5
+1"
+#5
+0C
+#5
+0a
+#5
+1D
+#5
+1$
+#5
+1#
+#5
+1¥
+#5
+1¤
+#5
+1ƒ
+#5
+1†
+#5
+0b
+#5
+1Æ
+#5
+1Å
+#5
+0c
+#5
+1Ã
+#5
+0d
+#5
+1Ä
+#5
+0f
+#5
+1e
+#5
+1c
+#5
+1d
+#5
+1Ç
+#5
+0g
+#5
+1È
+#5
+1É
+#5
+0h
+#5
+1i
+#6
+1a
+#6
+0E
+#6
+0#
+#6
+0C
+#6
+0D
+#6
+0F
+#6
+1H
+#6
+1&
+#6
+1%
+#6
+0$
+#6
+0B
+#6
+0!
+#6
+1(
+#6
+0A
+#6
+0"
+#6
+0'
+#6
+1G
+#6
+1¨
+#6
+0†
+#6
+0„
+#6
+0‰
+#6
+1©
+#6
+0…
+#6
+0ƒ
+#6
+0ˆ
+#6
+0‡
+#6
+1§
+#6
+0Ä
+#6
+0Å
+#6
+1h
+#6
+0É
+#6
+0È
+#6
+0Ã
+#6
+1g
+#6
+0Ç
+#6
+0Æ
+#6
+1f
+#6
+0g
+#6
+0h
+#6
+0f
+#6
+0d
+#6
+0e
+#6
+0i
+#6
+0c

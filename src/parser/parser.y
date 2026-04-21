@@ -389,15 +389,26 @@ signal_assignment
             printf("parsed assignment with delay: %s <= after %d ns\n", $1, $5);
         }
     ;
-
+    
 if_statement
-    : IF IDENTIFIER '=' bit_literal THEN statement_list END_TOK IF ';'
+    : IF IDENTIFIER '=' bit_literal THEN { $<num>$ = temp_stmt_count; temp_stmt_count = 0; } statement_list END_TOK IF ';'
         {
             // CHIRAG 18-04-26 :: fixed if statement parsing
             // old code never stored inner statements into NODE_IF
             // they leaked into outer process statement list instead
             // fix ... save temp_stmt_count before parsing inner statements
             // then copy them into if node and restore count
+            //
+            // CHIRAG 22-04-26 :: extended to support nested ifs
+            // old rule had no mid-rule action ... temp_stmts was shared flat array
+            // problem ... if T='1' then Q<=not Q; end if; inside outer if
+            // inner if statements went into temp_stmts ... outer if grabbed all of them
+            // thinking they were its own statements ... nested if completely broken
+            //
+            // fix ... mid-rule action at $6 saves outer count and resets to 0
+            // so inner parsing starts fresh ... outer restores count after
+            // same trick already used for else branch ... just applied to then-block too
+            int saved = $<num>6;
             $$ = ast_new_node(NODE_IF);
             $$->data.if_stmt.signal_name = strdup($2);
             $$->data.if_stmt.bit_value = $4;
@@ -406,11 +417,12 @@ if_statement
             $$->data.if_stmt.statement_count = temp_stmt_count;
             for(int i = 0; i < temp_stmt_count; i++)
                 $$->data.if_stmt.statements[i] = temp_stmts[i];
-            // reset count so outer process doesnt see these
-            temp_stmt_count = 0;
+            $$->data.if_stmt.else_statement_count = 0;
+            // restore outer count ... outer process picks up from where it left off
+            temp_stmt_count = saved;
             printf("parsed if: %s = '%d' with %d statements\n", $2, $4, $$->data.if_stmt.statement_count);
         }
-    | IF IDENTIFIER '=' bit_literal THEN statement_list { $<num>$ = temp_stmt_count; } ELSE_TOK statement_list END_TOK IF ';'
+    | IF IDENTIFIER '=' bit_literal THEN { $<num>$ = temp_stmt_count; temp_stmt_count = 0; } statement_list { $<num>$ = temp_stmt_count; } ELSE_TOK { temp_stmt_count = 0; } statement_list END_TOK IF ';'
         {
             // CHIRAG 18-04-26 :: if with else branch
             // problem here ... both then-block and else-block use temp_stmts
@@ -426,20 +438,26 @@ if_statement
             // real fix ... use a mid-rule action to snapshot temp_stmt_count
             // after first statement_list but before ELSE_TOK
             // $<num>5 trick ... store count in a typed mid-rule slot
+            //
+            // CHIRAG 22-04-26 :: extended same fix to then-block too
+            // now both then and else blocks save/restore around nested ifs
+            // saved_before restores outer context after whole if-else done
+            int saved_before = $<num>6;
+            int then_count = $<num>8;
+            int else_count = temp_stmt_count;
             $$ = ast_new_node(NODE_IF);
             $$->data.if_stmt.signal_name = strdup($2);
             $$->data.if_stmt.bit_value = $4;
-            // then-block count was saved by mid-rule action into $6
-            // else-block is everything after that
-            int then_count = $<num>7;
-            int else_count = temp_stmt_count - then_count;
+            // then-block count was saved by mid-rule action
+            // else-block count is whatever was collected after reset
             $$->data.if_stmt.statement_count = then_count;
             for(int i = 0; i < then_count; i++)
                 $$->data.if_stmt.statements[i] = temp_stmts[i];
             $$->data.if_stmt.else_statement_count = else_count;
             for(int i = 0; i < else_count; i++)
-                $$->data.if_stmt.else_statements[i] = temp_stmts[then_count + i];
-            temp_stmt_count = 0;
+                $$->data.if_stmt.else_statements[i] = temp_stmts[i];
+            // restore outer context
+            temp_stmt_count = saved_before;
             printf("parsed if-else: %s = '%d' then=%d else=%d\n", $2, $4, then_count, else_count);
         }
     ;
@@ -653,9 +671,43 @@ int main(int argc, char* argv[])
     // old code assumed argv[3] always has mode flag ... only true when TB is present
     // when no TB ... argv[2] is the mode flag ... argv[3] doesnt exist
     // fix ... check both argv[2] and argv[3] for --seq flag
-    if((argc > 2 && strcmp(argv[2], "--seq") == 0) ||
-       (argc > 3 && strcmp(argv[3], "--seq") == 0))
-        use_parallel = 0;
+    // if((argc > 2 && strcmp(argv[2], "--seq") == 0) || (argc > 3 && strcmp(argv[3], "--seq") == 0))
+    //   use_parallel = 0;
+    // CHIRAG 22-04-26 :: parse --seq and --stress N from argv
+    // problem ... old code only checked argv[2] and argv[3] for --seq
+    // now we have --stress N as a third optional flag ... old approach breaks
+    // fix ... loop all argv and handle each flag by name ... order doesnt matter
+    // --stress N sets stress_ns in ast_walker.c via extern
+    // --seq sets use_parallel=0 ... everything else is ignored
+    // extern int stress_ns;
+    // for(int i = 1; i < argc; i++)
+    // {
+    //     if(strcmp(argv[i], "--seq") == 0)
+    //         use_parallel = 0;
+    //     else if(strcmp(argv[i], "--stress") == 0 && i + 1 < argc)
+    //     {
+    //         stress_ns = atoi(argv[i + 1]);
+    //         i++; // skip the number ... already consumed
+    //     }
+    // }
+    // printf("stress: %d ns per process\n", stress_ns);
+
+    // CHIRAG 22-04-26 :: parse --seq and --stress N from argv
+    // loop all argv ... order doesnt matter ... --stress 1000 --seq same as --seq --stress 1000
+    // extern stress_ns defined in ast_walker.c ... set here before sim runs
+    extern int stress_ns;
+    for(int i = 1; i < argc; i++)
+    {
+        if(strcmp(argv[i], "--seq") == 0)
+            use_parallel = 0;
+        else if(strcmp(argv[i], "--stress") == 0 && i + 1 < argc)
+        {
+            stress_ns = atoi(argv[i + 1]);
+            i++;
+        }
+    }
+    printf("stress: %d flops per gate\n", stress_ns);
+
     double t_start = omp_get_wtime();
     if(use_parallel)
         run_parallel_simulation(&eq, &sch, &signals, g);
@@ -686,7 +738,7 @@ int main(int argc, char* argv[])
     printf("total process firings : %d\n", stat_process_firings);
     printf("max delta depth       : %d\n", stat_max_delta_depth);
     printf("--------------------------\n");
-     // CHIRAG 21-04-26 :: Amdahl's law theoretical speedup
+    // CHIRAG 21-04-26 :: Amdahl's law theoretical speedup
     // idea ... show what speedup is theoretically possible given our parallel fraction
     // problem ... measured times on small circuits are noisy ... timer resolution too coarse
     // solution ... compute theoretical Amdahl numbers from graph structure
@@ -694,16 +746,16 @@ int main(int argc, char* argv[])
     // if all processes same color ... S is just overhead fraction ... estimate 0.3
     // Amdahl ... Speedup(N) = 1 / (S + (1-S)/N)
     // this gives upper bound on speedup ... real speedup will be lower due to overhead
-    float S = (g->num_colors > 1) ? (1.0f / g->num_colors) : 0.3f;
-    printf("\n--- amdahl's law (theoretical) ---\n");
-    printf("serial fraction S     : %.2f\n", S);
-    printf("parallel fraction     : %.2f\n", 1.0f - S);
-    for(int n = 1; n <= 16; n *= 2)
-    {
-        float speedup = 1.0f / (S + (1.0f - S) / n);
-        printf("threads=%2d  speedup   : %.2fx\n", n, speedup);
-    }
-    printf("----------------------------------\n");
+    // float S = (g->num_colors > 1) ? (1.0f / g->num_colors) : 0.3f;
+    // printf("\n--- amdahl's law (theoretical) ---\n");
+    // printf("serial fraction S     : %.2f\n", S);
+    // printf("parallel fraction     : %.2f\n", 1.0f - S);
+    // for(int n = 1; n <= 16; n *= 2)
+    // {
+    //     float speedup = 1.0f / (S + (1.0f - S) / n);
+    //     printf("threads=%2d  speedup   : %.2fx\n", n, speedup);
+    // }
+    // printf("----------------------------------\n");
     graph_free(g); 
     vcd_close();
     return 0;

@@ -1,0 +1,29 @@
+# CHIRAG 22-04-26 :: TFF testbench
+# T=0 ... Q holds on clock edge
+# T=1 ... Q toggles on clock edge
+# expected Q sequence: 0 -> 0 -> 1 -> 0 -> 1 -> 1
+
+# T=0 before first clock ... Q should hold at 0
+T 0 1
+CLK 1 2
+CLK 0 3
+
+# T=1 before second clock ... Q should toggle 0->1
+T 1 4
+CLK 1 5
+CLK 0 6
+
+# T=1 again ... Q should toggle 1->0
+T 1 7
+CLK 1 8
+CLK 0 9
+
+# T=0 ... Q should hold at 0
+T 0 10
+CLK 1 11
+CLK 0 12
+
+# T=1 ... Q should toggle 0->1
+T 1 13
+CLK 1 14
+CLK 0 15

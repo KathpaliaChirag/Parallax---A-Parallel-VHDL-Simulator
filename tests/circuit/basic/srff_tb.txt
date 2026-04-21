@@ -1,0 +1,32 @@
+# CHIRAG 22-04-26 :: SRFF testbench
+# test set ... reset ... hold behavior
+
+# set Q to 1
+S 1 1
+R 0 1
+CLK 1 2
+CLK 0 3
+
+# hold ... S=0 R=0 ... Q stays 1
+S 0 4
+R 0 4
+CLK 1 5
+CLK 0 6
+
+# reset Q to 0
+S 0 7
+R 1 7
+CLK 1 8
+CLK 0 9
+
+# hold ... Q stays 0
+S 0 10
+R 0 10
+CLK 1 11
+CLK 0 12
+
+# set again
+S 1 13
+R 0 13
+CLK 1 14
+CLK 0 15
