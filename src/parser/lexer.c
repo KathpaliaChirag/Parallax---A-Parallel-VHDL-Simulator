@@ -1,6 +1,6 @@
-#line 1 "src/parser/lexer.c"
+#line 2 "src/parser/lexer.c"
 
-#line 3 "src/parser/lexer.c"
+#line 4 "src/parser/lexer.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -562,8 +562,8 @@ char *yytext;
 #define YY_NO_UNPUT
 #include "parser.h"
 #include <string.h>
-#line 565 "src/parser/lexer.c"
 #line 566 "src/parser/lexer.c"
+#line 567 "src/parser/lexer.c"
 
 #define INITIAL 0
 
@@ -783,7 +783,7 @@ YY_DECL
 #line 54 "src/parser/lexer.l"
 
 
-#line 786 "src/parser/lexer.c"
+#line 787 "src/parser/lexer.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1036,7 +1036,7 @@ YY_RULE_SETUP
 #line 95 "src/parser/lexer.l"
 ECHO;
 	YY_BREAK
-#line 1039 "src/parser/lexer.c"
+#line 1040 "src/parser/lexer.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

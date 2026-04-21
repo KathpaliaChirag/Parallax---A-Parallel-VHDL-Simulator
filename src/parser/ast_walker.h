@@ -14,7 +14,9 @@
 // extern EventQueue* walker_queue;
 // CHIRAG 15-04-26 :: array of queues ... one per thread ... indexed by omp_get_thread_num()
 // avoids threadprivate linker issues with bison generated code
-extern EventQueue* walker_queues[64];
+// extern EventQueue* walker_queues[64];
+// CHIRAG 21-04-26 :: bumped to 256 ... wide_and128 has 128+ processes
+extern EventQueue* walker_queues[256];
 void ast_walk(ASTNode* root, DynArray_Signal* signals, Scheduler* sch);
 // CHIRAG 02-04-26 06:07 :: exposed so parallel.c can use it directly as thread entry point
 void run_proc_generic(int idx);

@@ -129,3 +129,12 @@ last updated: 13-04-26
    closest we have to observable speedup with current architecture.
    
    priority: medium ... engine is correct ... this is a performance tuning issue
+
+   9. STACK OVERFLOW ON LARGE CIRCUITS (>119 PROCESSES)
+   issue: ASTNode struct with MAX_CHILDREN=256 is very large
+   each node has multiple 256-element arrays ... struct is ~50KB
+   default Linux stack is 8MB ... overflows at around process 119
+   fix: run with ulimit -s unlimited before executing parser_test.exe
+   added to Makefile circuit target automatically
+   long term fix: replace fixed arrays in ASTNode with dynamic pointers
+   priority: medium ... Makefile fix works for now

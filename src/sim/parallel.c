@@ -36,12 +36,22 @@
 // that causes heap corruption ... two threads doing insert_ele simultaneously = disaster
 // solution ... each thread gets its own local queue ... merge all into global after parallel section
 // extern EventQueue* walker_queue;
-extern EventQueue* walker_queues[64];
-static EventQueue local_queues[64];  // one per thread ... 64 is more than enough
-
+// extern EventQueue* walker_queues[64];
+// static EventQueue local_queues[64];  // one per thread ... 64 is more than enough
+// CHIRAG 21-04-26 :: bumped to 256 ... wide_and128 needs 128+ thread slots
+extern EventQueue* walker_queues[256];
+static EventQueue local_queues[256];
 void run_parallel_simulation(EventQueue* p, Scheduler* sch, 
                               DynArray_Signal* signal, DepGraph* g)
 {
+    // CHIRAG 21-04-26 :: pre-allocate local queues ONCE before simulation
+    // old code called init_queue() inside the delta loop ... every delta = malloc
+    // 946 deltas x 256 threads = 246000 malloc calls ... pure overhead
+    // fix ... allocate once here ... reset size=0 each delta instead of reinit
+    // this eliminates all queue malloc overhead from the hot path
+    int num_threads = omp_get_max_threads();
+    for(int t = 0; t < num_threads; t++)
+        local_queues[t] = init_queue();
     while(p->size)
     {
         do
@@ -77,7 +87,10 @@ void run_parallel_simulation(EventQueue* p, Scheduler* sch,
             // PHASE 3 ... find triggered processes
             // which processes need to run this delta?
             // same logic as sequential ... check which signals changed ... find processes watching them
-            int triggered[64];
+            // int triggered[64];
+            // CHIRAG 21-04-26 :: bumped from 64 to 256 ... wide_and128 has 128 processes
+            // old cap caused segfault at process 65 ... stack overflow on triggered array
+            int triggered[256];
             int num_triggered = 0;
             for(int i = 0; i < sch->process_ARRAY.size; i++)
             {
@@ -110,9 +123,12 @@ void run_parallel_simulation(EventQueue* p, Scheduler* sch,
             // why omp parallel for here and not outer loop?
             // outer loop is color batches ... must run sequentially ... batch 1 before batch 2
             // inner loop is processes within a batch ... these are independent ... parallelize here
-            int num_threads = omp_get_max_threads();
+            // CHIRAG 21-04-26 :: reset queues instead of reinitializing
+            // old code ... init_queue() every delta ... malloc every time ... killer overhead
+            // new code ... just reset size to 0 ... reuse existing heap memory
+            // data array stays allocated ... no malloc ... no free ... just pointer reset
             for(int t = 0; t < num_threads; t++)
-                local_queues[t] = init_queue();
+                local_queues[t].size = 0;
 
             // point walker at local queue for this thread ... set before parallel region
             for(int color = 0; color < g->num_colors; color++)

@@ -97,8 +97,13 @@ struct ASTNode {
             ASTNode* statements[MAX_CHILDREN];
             int statement_count;
             // CHIRAG 21-04-26 :: function declarations in architecture
-            ASTNode* funcs[MAX_CHILDREN];
-            int func_count;
+            // ASTNode* funcs[MAX_CHILDREN];
+            // int func_count;
+            // CHIRAG 21-04-26 :: AI Assisted fix was here removed funcs[] from here ... it doesnt belong in process
+            // funcs[] was accidentally added to process struct during function support work
+            // it caused struct to be ~32KB larger than needed ... stack overflow at process 119
+            // funcs[] lives in arch struct only ... processes dont declare functions
+        
         } process;
 
        struct {

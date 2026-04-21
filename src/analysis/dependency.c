@@ -3,9 +3,11 @@
 #include <string.h>
 #include "dependency.h"
 
-#define MAX_PROC 64
-#define MAX_SIG 64
-
+// #define MAX_PROC 64
+// #define MAX_SIG 64
+// CHIRAG 21-04-26 :: bumped from 64 to 256 ... wide_and128 needs 128+ processes
+#define MAX_PROC 256
+#define MAX_SIG 256
 // CHIRAG 04-04-26 :: recursively walk expression and collect all signal names read
 // expr like (A and B) ... reads both A and B
 // stores found names into reads[proc_idx]

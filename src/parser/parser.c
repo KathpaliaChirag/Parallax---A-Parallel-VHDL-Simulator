@@ -2027,7 +2027,8 @@ int main(int argc, char* argv[])
     walker_queues[0] = &eq;
     // CHIRAG 13-04-26 :: collect all input signals for testbench generation
     // direction 0 = input ... set in ast_walker when walking NODE_PORT
-    int input_signals[64];
+    // int input_signals[64];
+    int input_signals[256];
     int input_count = 0;
     for(int i = 0; i < signals.size; i++)
         if(signals.data[i].direction == 0)

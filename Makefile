@@ -86,8 +86,13 @@ wave_parser:
 # CHIRAG 17-04-26 :: THREADS controls how many openmp threads to use
 # OMP_PROC_BIND=close keeps threads on same socket ... reduces cache miss overhead
 # usage: make circuit FILE=... TB=... MODE=--par THREADS=4
+# circuit: parser
+# 	OMP_NUM_THREADS=$(or $(THREADS),1) OMP_PROC_BIND=close ./parser_test.exe $(basename $(notdir $(FILE))) $(TB) $(MODE) < $(FILE)
 circuit: parser
-	OMP_NUM_THREADS=$(or $(THREADS),1) OMP_PROC_BIND=close ./parser_test.exe $(basename $(notdir $(FILE))) $(TB) $(MODE) < $(FILE)
+	# CHIRAG 21-04-26 :: ulimit -s unlimited needed for large circuits
+	# wide_and128 has 128 processes ... ASTNode with MAX_CHILDREN=256 is huge
+	# default 8MB stack overflows at process 119 ... unlimited fixes this
+	ulimit -s unlimited && OMP_NUM_THREADS=$(or $(THREADS),1) OMP_PROC_BIND=close ./parser_test.exe $(basename $(notdir $(FILE))) $(TB) $(MODE) < $(FILE)
 clean:
 	rm -f main.exe parser_test.exe
 	rm -f $(PARSER)/parser.c $(PARSER)/parser.h $(PARSER)/lexer.c

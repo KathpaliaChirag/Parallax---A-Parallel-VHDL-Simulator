@@ -123,7 +123,9 @@ static ASTNode* find_func(char* name)
 // #pragma omp threadprivate(walker_queue)
 // CHIRAG 15-04-26 :: one queue pointer per thread ... thread N uses walker_queues[N]
 // replaces threadprivate approach which caused linker issues with bison generated parser
-EventQueue* walker_queues[64];
+// EventQueue* walker_queues[64];
+// REPLACE with -- CHIRAG 21-04-26 :: bumped to 256 for wide circuits
+EventQueue* walker_queues[256];
 // -------------------------------------------------------------------------
 //old implementation ahad problem so fixed it with a new one taken help of AI here 
 // CHIRAG : walk an expression AST node and compute the result
