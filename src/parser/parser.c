@@ -110,8 +110,21 @@ int temp_sens_count = 0;
 // separate from temp_ports ... ports belong to entity ... these belong to arch
 ASTNode* temp_arch_signals[256];
 int temp_arch_signal_count = 0;
+// CHIRAG 21-04-26 :: temp storage for function declarations
+// functions live between IS and BEGIN in architecture ... like signal decls
+// stored here during parsing ... copied into arch node when rule completes
+ASTNode* temp_funcs[128];
+int temp_func_count = 0;
 
-#line 115 "src/parser/parser.c"
+// temp storage for function parameters during parsing
+char* temp_params[128];
+int temp_param_count = 0;
+
+// temp storage for function call arguments during parsing
+ASTNode* temp_args[128];
+int temp_arg_count = 0;
+
+#line 128 "src/parser/parser.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -167,31 +180,38 @@ enum yysymbol_kind_t
   YYSYMBOL_ASSIGN = 25,                    /* ASSIGN  */
   YYSYMBOL_AFTER_TOK = 26,                 /* AFTER_TOK  */
   YYSYMBOL_NS_TOK = 27,                    /* NS_TOK  */
-  YYSYMBOL_INTEGER = 28,                   /* INTEGER  */
-  YYSYMBOL_29_ = 29,                       /* '('  */
-  YYSYMBOL_30_ = 30,                       /* ')'  */
-  YYSYMBOL_31_ = 31,                       /* ';'  */
-  YYSYMBOL_32_ = 32,                       /* ':'  */
-  YYSYMBOL_33_ = 33,                       /* ','  */
-  YYSYMBOL_34_ = 34,                       /* '='  */
-  YYSYMBOL_YYACCEPT = 35,                  /* $accept  */
-  YYSYMBOL_program = 36,                   /* program  */
-  YYSYMBOL_entity_decl = 37,               /* entity_decl  */
-  YYSYMBOL_port_list = 38,                 /* port_list  */
-  YYSYMBOL_port_item = 39,                 /* port_item  */
-  YYSYMBOL_signal_decl_list = 40,          /* signal_decl_list  */
-  YYSYMBOL_signal_decl = 41,               /* signal_decl  */
-  YYSYMBOL_identifier_list = 42,           /* identifier_list  */
-  YYSYMBOL_process_list = 43,              /* process_list  */
-  YYSYMBOL_architecture_decl = 44,         /* architecture_decl  */
-  YYSYMBOL_process_decl = 45,              /* process_decl  */
-  YYSYMBOL_statement_list = 46,            /* statement_list  */
-  YYSYMBOL_statement = 47,                 /* statement  */
-  YYSYMBOL_signal_assignment = 48,         /* signal_assignment  */
-  YYSYMBOL_if_statement = 49,              /* if_statement  */
-  YYSYMBOL_50_1 = 50,                      /* @1  */
-  YYSYMBOL_bit_literal = 51,               /* bit_literal  */
-  YYSYMBOL_expression = 52                 /* expression  */
+  YYSYMBOL_FUNCTION_TOK = 28,              /* FUNCTION_TOK  */
+  YYSYMBOL_RETURN_TOK = 29,                /* RETURN_TOK  */
+  YYSYMBOL_INTEGER = 30,                   /* INTEGER  */
+  YYSYMBOL_31_ = 31,                       /* '('  */
+  YYSYMBOL_32_ = 32,                       /* ')'  */
+  YYSYMBOL_33_ = 33,                       /* ';'  */
+  YYSYMBOL_34_ = 34,                       /* ':'  */
+  YYSYMBOL_35_ = 35,                       /* ','  */
+  YYSYMBOL_36_ = 36,                       /* '='  */
+  YYSYMBOL_YYACCEPT = 37,                  /* $accept  */
+  YYSYMBOL_program = 38,                   /* program  */
+  YYSYMBOL_entity_decl = 39,               /* entity_decl  */
+  YYSYMBOL_port_list = 40,                 /* port_list  */
+  YYSYMBOL_port_item = 41,                 /* port_item  */
+  YYSYMBOL_func_decl_list = 42,            /* func_decl_list  */
+  YYSYMBOL_func_decl = 43,                 /* func_decl  */
+  YYSYMBOL_func_param_list = 44,           /* func_param_list  */
+  YYSYMBOL_func_param = 45,                /* func_param  */
+  YYSYMBOL_arg_list = 46,                  /* arg_list  */
+  YYSYMBOL_signal_decl_list = 47,          /* signal_decl_list  */
+  YYSYMBOL_signal_decl = 48,               /* signal_decl  */
+  YYSYMBOL_identifier_list = 49,           /* identifier_list  */
+  YYSYMBOL_process_list = 50,              /* process_list  */
+  YYSYMBOL_architecture_decl = 51,         /* architecture_decl  */
+  YYSYMBOL_process_decl = 52,              /* process_decl  */
+  YYSYMBOL_statement_list = 53,            /* statement_list  */
+  YYSYMBOL_statement = 54,                 /* statement  */
+  YYSYMBOL_signal_assignment = 55,         /* signal_assignment  */
+  YYSYMBOL_if_statement = 56,              /* if_statement  */
+  YYSYMBOL_57_1 = 57,                      /* @1  */
+  YYSYMBOL_bit_literal = 58,               /* bit_literal  */
+  YYSYMBOL_expression = 59                 /* expression  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -308,7 +328,7 @@ typedef int yytype_uint16;
 
 
 /* Stored state numbers (used for stacks). */
-typedef yytype_int8 yy_state_t;
+typedef yytype_uint8 yy_state_t;
 
 /* State numbers in computations.  */
 typedef int yy_state_fast_t;
@@ -519,19 +539,19 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  5
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   122
+#define YYLAST   181
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  35
+#define YYNTOKENS  37
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  18
+#define YYNNTS  23
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  34
+#define YYNRULES  45
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  103
+#define YYNSTATES  144
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   283
+#define YYMAXUTOK   285
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -549,9 +569,9 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      29,    30,     2,     2,    33,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    32,    31,
-       2,    34,     2,     2,     2,     2,     2,     2,     2,     2,
+      31,    32,     2,     2,    35,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    34,    33,
+       2,    36,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -573,17 +593,18 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    26,    27,    28
+      25,    26,    27,    28,    29,    30
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    79,    79,    89,   103,   105,   110,   119,   131,   133,
-     138,   152,   154,   160,   162,   167,   184,   202,   221,   223,
-     228,   230,   235,   245,   259,   278,   278,   313,   314,   318,
-     324,   331,   338,   345,   351
+       0,    95,    95,   105,   119,   121,   126,   135,   146,   148,
+     153,   179,   181,   186,   198,   203,   210,   212,   217,   231,
+     233,   239,   241,   246,   276,   295,   316,   336,   355,   357,
+     362,   364,   370,   380,   394,   413,   413,   448,   449,   453,
+     459,   466,   473,   480,   486,   499
 };
 #endif
 
@@ -603,11 +624,13 @@ static const char *const yytname[] =
   "ONE", "ENTITY", "ARCHITECTURE", "PORT", "PROCESS", "BEGIN_TOK",
   "END_TOK", "IS", "OF", "IN_TOK", "OUT_TOK", "BIT", "AND_TOK", "OR_TOK",
   "NOT_TOK", "XOR_TOK", "IF", "THEN", "SIGNAL", "ELSE_TOK", "ASSIGN",
-  "AFTER_TOK", "NS_TOK", "INTEGER", "'('", "')'", "';'", "':'", "','",
-  "'='", "$accept", "program", "entity_decl", "port_list", "port_item",
-  "signal_decl_list", "signal_decl", "identifier_list", "process_list",
-  "architecture_decl", "process_decl", "statement_list", "statement",
-  "signal_assignment", "if_statement", "@1", "bit_literal", "expression", YY_NULLPTR
+  "AFTER_TOK", "NS_TOK", "FUNCTION_TOK", "RETURN_TOK", "INTEGER", "'('",
+  "')'", "';'", "':'", "','", "'='", "$accept", "program", "entity_decl",
+  "port_list", "port_item", "func_decl_list", "func_decl",
+  "func_param_list", "func_param", "arg_list", "signal_decl_list",
+  "signal_decl", "identifier_list", "process_list", "architecture_decl",
+  "process_decl", "statement_list", "statement", "signal_assignment",
+  "if_statement", "@1", "bit_literal", "expression", YY_NULLPTR
 };
 
 static const char *
@@ -617,7 +640,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-83)
+#define YYPACT_NINF (-97)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -629,19 +652,23 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-static const yytype_int8 yypact[] =
+static const yytype_int16 yypact[] =
 {
-      18,    48,    57,    52,    46,   -83,    58,   -83,    54,    47,
-      34,    61,    62,    55,   -83,     4,   -83,    12,     3,    35,
-      62,    39,    65,    60,    67,    15,   -83,    63,   -83,    56,
-      59,   -83,    42,     5,   -83,    44,    60,   -83,    70,   -83,
-     -83,    62,    74,   -83,    64,    41,    50,    13,    53,    66,
-      75,   -83,    69,   -83,   -83,    68,     2,   -83,    71,    79,
-      -1,   -83,   -83,   -83,    -2,    49,    76,   -83,   -83,    -2,
-      -2,    11,    51,    72,   -83,   -11,    -2,    -2,    -2,    73,
-     -83,   -83,   -83,    78,   -83,   -83,   -83,    16,   -83,    77,
-       2,    80,     0,   -83,    81,    82,    83,     2,   -83,     1,
-      84,    85,   -83
+      19,     1,    36,    33,    34,   -97,    67,   -97,    66,    70,
+      48,    84,    93,    85,   -97,    53,   -97,    54,    -5,    65,
+      93,    76,    96,    91,    98,    99,    -2,   -97,     5,   -97,
+      92,   -97,    88,    89,   -97,    75,    41,   -97,    74,    78,
+      91,   -97,    91,    14,   -97,   104,   -97,   -97,    93,   107,
+     -97,    95,   109,    64,    69,    91,    80,     9,    81,    82,
+      83,    60,   -97,   113,   115,    73,   -97,   110,   -97,   -97,
+     103,    94,   109,    97,   100,   118,    32,   -97,   106,   -97,
+     -97,   -97,   101,   102,   121,     6,   -97,   -97,   -97,   114,
+     -97,     3,   105,   116,   -97,   119,   108,     3,     3,    39,
+      90,   111,   117,     3,   -97,    49,     3,     3,     3,   112,
+     -97,   -97,   -97,   123,   -97,     3,    16,    -4,   -97,   -97,
+      51,   -97,   120,    32,    43,   -97,     3,   122,    26,   124,
+      -4,   -97,   127,   125,   126,   128,    32,   129,   -97,    28,
+     -97,   130,   131,   -97
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -650,102 +677,126 @@ static const yytype_int8 yypact[] =
 static const yytype_int8 yydefact[] =
 {
        0,     0,     0,     0,     0,     1,     0,     2,     0,     0,
-       0,     0,     0,     0,    11,     0,     4,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     8,     0,     5,     0,
-       0,    12,     0,     0,    13,     0,     0,     9,     0,     6,
-       7,     0,     0,    14,     0,     0,     0,     0,     0,     0,
-       0,     3,     0,    16,    10,     0,     0,    15,     0,     0,
-       0,    18,    20,    21,     0,     0,     0,    19,    29,     0,
-       0,     0,     0,     0,    33,     0,     0,     0,     0,     0,
-      22,    27,    28,     0,    17,    34,    30,    32,    31,     0,
-       0,     0,    25,    23,     0,     0,     0,     0,    24,     0,
-       0,     0,    26
+       0,     0,     0,     0,    19,     0,     4,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     8,     0,    16,
+       0,     5,     0,     0,    20,     0,     0,    21,     0,     0,
+       0,     9,     0,     0,    17,     0,     6,     7,     0,     0,
+      22,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,    11,     0,     0,     0,     3,     0,    26,    18,
+       0,     0,     0,     0,     0,     0,     0,    13,     0,    12,
+      24,    25,     0,     0,     0,     0,    28,    30,    31,     0,
+      23,     0,     0,     0,    29,     0,    39,     0,     0,     0,
+       0,     0,     0,     0,    43,     0,     0,     0,     0,     0,
+      32,    37,    38,     0,    27,     0,     0,    14,    45,    40,
+      42,    41,     0,     0,     0,    44,     0,     0,    35,     0,
+      15,    33,     0,     0,     0,     0,     0,     0,    34,     0,
+      10,     0,     0,    36
 };
 
 /* YYPGOTO[NTERM-NUM].  */
-static const yytype_int8 yypgoto[] =
+static const yytype_int16 yypgoto[] =
 {
-     -83,   -83,   -83,   -83,    87,   -83,    88,    45,    86,   -83,
-     -15,   -82,   -60,   -83,   -83,   -83,   -83,   -29
+     -97,   -97,   -97,   -97,   132,   135,    12,   -97,    56,   -97,
+     -97,   137,   133,    22,   -97,   -33,   -78,   -85,   -97,   -97,
+     -97,   -97,   -96
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
-static const yytype_int8 yydefgoto[] =
+static const yytype_uint8 yydefgoto[] =
 {
-       0,     2,     3,    15,    16,    25,    26,    17,    33,     7,
-      34,    60,    61,    62,    63,    95,    83,    71
+       0,     2,     3,    15,    16,    26,    27,    61,    62,   116,
+      28,    29,    17,    36,     7,    37,    85,    86,    87,    88,
+     133,   113,    99
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule whose
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
-static const yytype_int8 yytable[] =
+static const yytype_uint8 yytable[] =
 {
-      67,    68,    58,    58,    58,    58,    76,    77,    92,    78,
-      66,    94,   100,    23,    32,    99,    42,    69,    43,    85,
-      59,    59,    59,    59,     1,    36,    24,    70,    76,    77,
-      43,    78,    67,    76,    19,    20,    78,    79,    24,    67,
-      74,    75,    80,    52,    21,    22,    22,    86,    87,    88,
-      32,     4,    50,    29,    30,    81,    82,     5,     8,     6,
-      11,     9,    10,    12,    13,    14,    27,    18,    31,    32,
-      35,    41,    39,    46,    38,    40,    44,    48,    55,    56,
-      49,    51,    65,    72,    53,    73,    47,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,    64,    54,     0,    57,
-      90,    89,    96,    84,    91,   101,    97,    28,     0,     0,
-       0,    93,     0,    37,    98,     0,   102,     0,     0,     0,
-       0,     0,    45
+      94,   104,   105,    50,     4,    23,    96,   117,    40,    83,
+     119,   120,   121,   106,   107,    42,   108,    93,    24,   124,
+      50,    50,    97,    25,    55,     1,    25,    84,    24,    83,
+     130,    83,    50,    25,    98,    83,     5,   132,    41,   141,
+       6,    67,    25,    94,    22,   128,     8,    84,   125,    84,
+      35,   126,    49,    84,    94,    41,   106,   107,   139,   108,
+     106,   107,    53,   108,    54,   109,   106,   107,   106,   108,
+       9,   108,   110,    35,    10,    63,   129,    65,    35,    12,
+      64,   118,    35,    11,    75,    19,    20,    13,    21,    22,
+      32,    33,    71,    72,   111,   112,    14,    18,    30,    34,
+      35,    38,    39,    45,    46,    47,    48,    56,    51,    52,
+      58,    59,    60,    66,    68,    69,    73,    70,    74,    77,
+      76,    82,    89,    78,    92,   101,    95,    91,    79,   102,
+      80,     0,     0,    81,    90,   134,     0,     0,     0,   103,
+       0,   100,   122,     0,   114,   123,   115,   127,   135,   136,
+       0,   142,    31,     0,   137,   131,     0,     0,     0,     0,
+       0,   138,   140,    43,   143,    44,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,    57
 };
 
-static const yytype_int8 yycheck[] =
+static const yytype_int16 yycheck[] =
 {
-      60,     3,     3,     3,     3,     3,    17,    18,    90,    20,
-      11,    11,    11,    10,     9,    97,    11,    19,    33,    30,
-      21,    21,    21,    21,     6,    10,    23,    29,    17,    18,
-      45,    20,    92,    17,    30,    31,    20,    26,    23,    99,
-      69,    70,    31,    30,    32,    33,    33,    76,    77,    78,
-       9,     3,    11,    14,    15,     4,     5,     0,    12,     7,
-      13,     3,     8,    29,     3,     3,    31,    12,     3,     9,
-       3,    29,    16,     3,    11,    16,    32,     3,     3,    10,
-      16,    31,     3,    34,    31,     9,    41,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    25,    31,    -1,    31,
-      22,    28,    21,    31,    27,    21,    24,    20,    -1,    -1,
-      -1,    31,    -1,    25,    31,    -1,    31,    -1,    -1,    -1,
-      -1,    -1,    36
+      85,    97,    98,    36,     3,    10,     3,   103,    10,     3,
+     106,   107,   108,    17,    18,    10,    20,    11,    23,   115,
+      53,    54,    19,    28,    10,     6,    28,    21,    23,     3,
+     126,     3,    65,    28,    31,     3,     0,    11,    26,    11,
+       7,    32,    28,   128,    35,   123,    12,    21,    32,    21,
+       9,    35,    11,    21,   139,    43,    17,    18,   136,    20,
+      17,    18,    40,    20,    42,    26,    17,    18,    17,    20,
+       3,    20,    33,     9,     8,    11,    33,    55,     9,    31,
+      11,    32,     9,    13,    11,    32,    33,     3,    34,    35,
+      14,    15,    32,    33,     4,     5,     3,    12,    33,     3,
+       9,     3,     3,    11,    16,    16,    31,     3,    34,    31,
+       3,    16,     3,    33,    33,    33,     3,    34,     3,    16,
+      10,     3,    16,    29,     3,     9,    12,    25,    72,    10,
+      33,    -1,    -1,    33,    33,    11,    -1,    -1,    -1,    31,
+      -1,    36,    30,    -1,    33,    22,    29,    27,    21,    24,
+      -1,    21,    20,    -1,    28,    33,    -1,    -1,    -1,    -1,
+      -1,    33,    33,    28,    33,    28,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    48
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     6,    36,    37,     3,     0,     7,    44,    12,     3,
-       8,    13,    29,     3,     3,    38,    39,    42,    12,    30,
-      31,    32,    33,    10,    23,    40,    41,    31,    39,    14,
-      15,     3,     9,    43,    45,     3,    10,    41,    11,    16,
-      16,    29,    11,    45,    32,    43,     3,    42,     3,    16,
-      11,    31,    30,    31,    31,     3,    10,    31,     3,    21,
-      46,    47,    48,    49,    25,     3,    11,    47,     3,    19,
-      29,    52,    34,     9,    52,    52,    17,    18,    20,    26,
-      31,     4,     5,    51,    31,    30,    52,    52,    52,    28,
-      22,    27,    46,    31,    11,    50,    21,    24,    31,    46,
-      11,    21,    31
+       0,     6,    38,    39,     3,     0,     7,    51,    12,     3,
+       8,    13,    31,     3,     3,    40,    41,    49,    12,    32,
+      33,    34,    35,    10,    23,    28,    42,    43,    47,    48,
+      33,    41,    14,    15,     3,     9,    50,    52,     3,     3,
+      10,    43,    10,    42,    48,    11,    16,    16,    31,    11,
+      52,    34,    31,    50,    50,    10,     3,    49,     3,    16,
+       3,    44,    45,    11,    11,    50,    33,    32,    33,    33,
+      34,    32,    33,     3,     3,    11,    10,    16,    29,    45,
+      33,    33,     3,     3,    21,    53,    54,    55,    56,    16,
+      33,    25,     3,    11,    54,    12,     3,    19,    31,    59,
+      36,     9,    10,    31,    59,    59,    17,    18,    20,    26,
+      33,     4,     5,    58,    33,    29,    46,    59,    32,    59,
+      59,    59,    30,    22,    59,    32,    35,    27,    53,    33,
+      59,    33,    11,    57,    11,    21,    24,    28,    33,    53,
+      33,    11,    21,    33
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    35,    36,    37,    38,    38,    39,    39,    40,    40,
-      41,    42,    42,    43,    43,    44,    44,    45,    46,    46,
-      47,    47,    48,    48,    49,    50,    49,    51,    51,    52,
-      52,    52,    52,    52,    52
+       0,    37,    38,    39,    40,    40,    41,    41,    42,    42,
+      43,    44,    44,    45,    46,    46,    47,    47,    48,    49,
+      49,    50,    50,    51,    51,    51,    51,    52,    53,    53,
+      54,    54,    55,    55,    56,    57,    56,    58,    58,    59,
+      59,    59,    59,    59,    59,    59
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     2,    11,     1,     3,     4,     4,     1,     2,
-       5,     1,     3,     1,     2,    11,    10,     9,     1,     2,
+      15,     1,     3,     3,     1,     3,     1,     2,     5,     1,
+       3,     1,     2,    12,    11,    11,    10,     9,     1,     2,
        1,     1,     4,     7,     9,     0,    12,     1,     1,     1,
-       3,     3,     3,     2,     3
+       3,     3,     3,     2,     4,     3
 };
 
 
@@ -1209,18 +1260,18 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: entity_decl architecture_decl  */
-#line 80 "src/parser/parser.y"
+#line 96 "src/parser/parser.y"
          {
             ast_entity = (yyvsp[-1].node);  
             (yyval.node) = (yyvsp[0].node);
             ast_root = (yyval.node);
             ast_print(ast_root, 0);
         }
-#line 1220 "src/parser/parser.c"
+#line 1271 "src/parser/parser.c"
     break;
 
   case 3: /* entity_decl: ENTITY IDENTIFIER IS PORT '(' port_list ')' ';' END_TOK IDENTIFIER ';'  */
-#line 90 "src/parser/parser.y"
+#line 106 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_ENTITY);
             (yyval.node)->data.entity.name = strdup((yyvsp[-9].str));
@@ -1231,23 +1282,23 @@ yyreduce:
             temp_port_count = 0;
             printf("parsed entity: %s with %d ports\n", (yyvsp[-9].str), (yyval.node)->data.entity.port_count);
         }
-#line 1235 "src/parser/parser.c"
+#line 1286 "src/parser/parser.c"
     break;
 
   case 4: /* port_list: port_item  */
-#line 104 "src/parser/parser.y"
+#line 120 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1241 "src/parser/parser.c"
+#line 1292 "src/parser/parser.c"
     break;
 
   case 5: /* port_list: port_list ';' port_item  */
-#line 106 "src/parser/parser.y"
+#line 122 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1247 "src/parser/parser.c"
+#line 1298 "src/parser/parser.c"
     break;
 
   case 6: /* port_item: identifier_list ':' IN_TOK BIT  */
-#line 111 "src/parser/parser.y"
+#line 127 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_PORT);
             (yyval.node)->data.port.name = strdup((yyvsp[-3].str));
@@ -1256,11 +1307,11 @@ yyreduce:
             temp_sens_count = 0;  // ← add this
             printf("parsed input port: %s\n", (yyvsp[-3].str));
         }
-#line 1260 "src/parser/parser.c"
+#line 1311 "src/parser/parser.c"
     break;
 
   case 7: /* port_item: identifier_list ':' OUT_TOK BIT  */
-#line 120 "src/parser/parser.y"
+#line 136 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_PORT);
             (yyval.node)->data.port.name = strdup((yyvsp[-3].str));
@@ -1269,23 +1320,105 @@ yyreduce:
             temp_sens_count = 0;  // ← add this
             printf("parsed output port: %s\n", (yyvsp[-3].str));
         }
-#line 1273 "src/parser/parser.c"
+#line 1324 "src/parser/parser.c"
     break;
 
-  case 8: /* signal_decl_list: signal_decl  */
-#line 132 "src/parser/parser.y"
+  case 8: /* func_decl_list: func_decl  */
+#line 147 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1279 "src/parser/parser.c"
+#line 1330 "src/parser/parser.c"
     break;
 
-  case 9: /* signal_decl_list: signal_decl_list signal_decl  */
-#line 134 "src/parser/parser.y"
+  case 9: /* func_decl_list: func_decl_list func_decl  */
+#line 149 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1285 "src/parser/parser.c"
+#line 1336 "src/parser/parser.c"
     break;
 
-  case 10: /* signal_decl: SIGNAL IDENTIFIER ':' BIT ';'  */
-#line 139 "src/parser/parser.y"
+  case 10: /* func_decl: FUNCTION_TOK IDENTIFIER '(' func_param_list ')' RETURN_TOK BIT IS BEGIN_TOK RETURN_TOK expression ';' END_TOK FUNCTION_TOK ';'  */
+#line 154 "src/parser/parser.y"
+        {
+            // CHIRAG 21-04-26 :: function declaration
+            // idea ... support function majority(A:bit; B:bit) return bit is begin return expr; end function;
+            // problem ... functions need their own AST node to store params and body
+            // solution ... NODE_FUNC_DECL stores name, param names, and body expression
+            // only single-return functions supported ... no local variables ... no loops
+            // this covers 90% of useful utility functions in RTL design
+            (yyval.node) = ast_new_node(NODE_FUNC_DECL);
+            (yyval.node)->data.func_decl.name = strdup((yyvsp[-13].str));
+            (yyval.node)->data.func_decl.param_count = temp_param_count;
+            for(int i = 0; i < temp_param_count; i++)
+                (yyval.node)->data.func_decl.params[i] = strdup(temp_params[i]);
+            // CHIRAG 21-04-26 :: was $12 before ... counted tokens wrong
+            // FUNCTION_TOK($1) IDENTIFIER($2) '('($3) func_param_list($4) ')'($5) 
+            // RETURN_TOK($6) BIT($7) IS($8) BEGIN_TOK($9) RETURN_TOK($10) expression($11)
+            // so expression is $11 not $12 ... $12 is the semicolon ... no type on semicolons
+            (yyval.node)->data.func_decl.body = (yyvsp[-4].node);
+            // $$->data.func_decl.body = $12;
+            temp_param_count = 0;
+            temp_funcs[temp_func_count++] = (yyval.node);
+            printf("parsed function: %s with %d params\n", (yyvsp[-13].str), (yyval.node)->data.func_decl.param_count);
+        }
+#line 1363 "src/parser/parser.c"
+    break;
+
+  case 11: /* func_param_list: func_param  */
+#line 180 "src/parser/parser.y"
+        { (yyval.node) = (yyvsp[0].node); }
+#line 1369 "src/parser/parser.c"
+    break;
+
+  case 12: /* func_param_list: func_param_list ';' func_param  */
+#line 182 "src/parser/parser.y"
+        { (yyval.node) = (yyvsp[0].node); }
+#line 1375 "src/parser/parser.c"
+    break;
+
+  case 13: /* func_param: IDENTIFIER ':' BIT  */
+#line 187 "src/parser/parser.y"
+        {
+            // CHIRAG 21-04-26 :: one function parameter ... A : bit
+            // store name in temp_params ... func_decl rule copies them
+            (yyval.node) = ast_new_node(NODE_PORT);
+            (yyval.node)->data.port.name = strdup((yyvsp[-2].str));
+            temp_params[temp_param_count++] = strdup((yyvsp[-2].str));
+            printf("parsed func param: %s\n", (yyvsp[-2].str));
+        }
+#line 1388 "src/parser/parser.c"
+    break;
+
+  case 14: /* arg_list: expression  */
+#line 199 "src/parser/parser.y"
+        {
+            (yyval.node) = (yyvsp[0].node);
+            temp_args[temp_arg_count++] = (yyvsp[0].node);
+        }
+#line 1397 "src/parser/parser.c"
+    break;
+
+  case 15: /* arg_list: arg_list ',' expression  */
+#line 204 "src/parser/parser.y"
+        {
+            (yyval.node) = (yyvsp[0].node);
+            temp_args[temp_arg_count++] = (yyvsp[0].node);
+        }
+#line 1406 "src/parser/parser.c"
+    break;
+
+  case 16: /* signal_decl_list: signal_decl  */
+#line 211 "src/parser/parser.y"
+        { (yyval.node) = (yyvsp[0].node); }
+#line 1412 "src/parser/parser.c"
+    break;
+
+  case 17: /* signal_decl_list: signal_decl_list signal_decl  */
+#line 213 "src/parser/parser.y"
+        { (yyval.node) = (yyvsp[0].node); }
+#line 1418 "src/parser/parser.c"
+    break;
+
+  case 18: /* signal_decl: SIGNAL IDENTIFIER ':' BIT ';'  */
+#line 218 "src/parser/parser.y"
         {
             // CHIRAG 18-04-26 :: internal signal ... lives in arch not entity
             // reusing NODE_PORT with DIR_INTERNAL so walker can create Signal struct
@@ -1296,36 +1429,96 @@ yyreduce:
             temp_arch_signals[temp_arch_signal_count++] = (yyval.node);
             printf("parsed internal signal: %s\n", (yyvsp[-3].str));
         }
-#line 1300 "src/parser/parser.c"
+#line 1433 "src/parser/parser.c"
     break;
 
-  case 11: /* identifier_list: IDENTIFIER  */
-#line 153 "src/parser/parser.y"
+  case 19: /* identifier_list: IDENTIFIER  */
+#line 232 "src/parser/parser.y"
         { (yyval.str) = (yyvsp[0].str); temp_sens[temp_sens_count++] = strdup((yyvsp[0].str)); }
-#line 1306 "src/parser/parser.c"
+#line 1439 "src/parser/parser.c"
     break;
 
-  case 12: /* identifier_list: identifier_list ',' IDENTIFIER  */
-#line 155 "src/parser/parser.y"
+  case 20: /* identifier_list: identifier_list ',' IDENTIFIER  */
+#line 234 "src/parser/parser.y"
         { (yyval.str) = (yyvsp[-2].str); temp_sens[temp_sens_count++] = strdup((yyvsp[0].str)); }
-#line 1312 "src/parser/parser.c"
+#line 1445 "src/parser/parser.c"
     break;
 
-  case 13: /* process_list: process_decl  */
-#line 161 "src/parser/parser.y"
+  case 21: /* process_list: process_decl  */
+#line 240 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1318 "src/parser/parser.c"
+#line 1451 "src/parser/parser.c"
     break;
 
-  case 14: /* process_list: process_list process_decl  */
-#line 163 "src/parser/parser.y"
+  case 22: /* process_list: process_list process_decl  */
+#line 242 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1324 "src/parser/parser.c"
+#line 1457 "src/parser/parser.c"
     break;
 
-  case 15: /* architecture_decl: ARCHITECTURE IDENTIFIER OF IDENTIFIER IS signal_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'  */
-#line 168 "src/parser/parser.y"
+  case 23: /* architecture_decl: ARCHITECTURE IDENTIFIER OF IDENTIFIER IS signal_decl_list func_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'  */
+#line 247 "src/parser/parser.y"
         {
+            // CHIRAG 21-04-26 :: signals + functions + processes ... most complete variant
+            // problem ... old architecture_decl only had 2 variants ... with signals and without
+            // it never referenced func_decl_list so bison marked those rules as useless
+            // fix ... added 4 variants to cover all combinations
+            // variant 1 ... signals + functions + processes ... for circuits like majority_voter
+            // variant 2 ... functions only ... no signal declarations
+            // variant 3 ... signals only ... no functions ... ripple carry adder etc
+            // variant 4 ... neither ... simple circuits like and_gate
+            (yyval.node) = ast_new_node(NODE_ARCH);
+            (yyval.node)->data.arch.name = strdup((yyvsp[-10].str));
+            (yyval.node)->data.arch.entity_name = strdup((yyvsp[-8].str));
+            for(int i = 0; i < temp_process_count; i++)
+                (yyval.node)->data.arch.processes[i] = temp_processes[i];
+            (yyval.node)->data.arch.process_count = temp_process_count;
+            temp_process_count = 0;
+            // CHIRAG 18-04-26 :: copy internal signals into arch node
+            for(int i = 0; i < temp_arch_signal_count; i++)
+                (yyval.node)->data.arch.signals[i] = temp_arch_signals[i];
+            (yyval.node)->data.arch.signal_count = temp_arch_signal_count;
+            temp_arch_signal_count = 0;
+            // CHIRAG 21-04-26 :: copy function declarations into arch node
+            for(int i = 0; i < temp_func_count; i++)
+                (yyval.node)->data.arch.funcs[i] = temp_funcs[i];
+            (yyval.node)->data.arch.func_count = temp_func_count;
+            temp_func_count = 0;
+            printf("parsed architecture: %s with %d processes, %d signals, %d functions\n",
+                (yyvsp[-10].str), (yyval.node)->data.arch.process_count, (yyval.node)->data.arch.signal_count, (yyval.node)->data.arch.func_count);
+        }
+#line 1491 "src/parser/parser.c"
+    break;
+
+  case 24: /* architecture_decl: ARCHITECTURE IDENTIFIER OF IDENTIFIER IS func_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'  */
+#line 277 "src/parser/parser.y"
+        {
+            // CHIRAG 21-04-26 :: functions only ... no signal declarations
+            // for circuits that use helper functions but no internal wires
+            (yyval.node) = ast_new_node(NODE_ARCH);
+            (yyval.node)->data.arch.name = strdup((yyvsp[-9].str));
+            (yyval.node)->data.arch.entity_name = strdup((yyvsp[-7].str));
+            for(int i = 0; i < temp_process_count; i++)
+                (yyval.node)->data.arch.processes[i] = temp_processes[i];
+            (yyval.node)->data.arch.process_count = temp_process_count;
+            temp_process_count = 0;
+            (yyval.node)->data.arch.signal_count = 0;
+            for(int i = 0; i < temp_func_count; i++)
+                (yyval.node)->data.arch.funcs[i] = temp_funcs[i];
+            (yyval.node)->data.arch.func_count = temp_func_count;
+            temp_func_count = 0;
+            printf("parsed architecture: %s with %d processes, %d functions\n",
+                (yyvsp[-9].str), (yyval.node)->data.arch.process_count, (yyval.node)->data.arch.func_count);
+        }
+#line 1514 "src/parser/parser.c"
+    break;
+
+  case 25: /* architecture_decl: ARCHITECTURE IDENTIFIER OF IDENTIFIER IS signal_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'  */
+#line 296 "src/parser/parser.y"
+        {
+            // CHIRAG 18-04-26 :: signals only ... no functions
+            // circuits like and_gate have no signal declarations ... this keeps them working
+            // CHIRAG 21-04-26 :: kept this variant ... func_count set to 0 explicitly
             (yyval.node) = ast_new_node(NODE_ARCH);
             (yyval.node)->data.arch.name = strdup((yyvsp[-9].str));
             (yyval.node)->data.arch.entity_name = strdup((yyvsp[-7].str));
@@ -1338,17 +1531,19 @@ yyreduce:
                 (yyval.node)->data.arch.signals[i] = temp_arch_signals[i];
             (yyval.node)->data.arch.signal_count = temp_arch_signal_count;
             temp_arch_signal_count = 0;
+            (yyval.node)->data.arch.func_count = 0;
             printf("parsed architecture: %s of %s with %d processes, %d internal signals\n",
                 (yyvsp[-9].str), (yyvsp[-7].str), (yyval.node)->data.arch.process_count, (yyval.node)->data.arch.signal_count);
         }
-#line 1345 "src/parser/parser.c"
+#line 1539 "src/parser/parser.c"
     break;
 
-  case 16: /* architecture_decl: ARCHITECTURE IDENTIFIER OF IDENTIFIER IS BEGIN_TOK process_list END_TOK IDENTIFIER ';'  */
-#line 185 "src/parser/parser.y"
+  case 26: /* architecture_decl: ARCHITECTURE IDENTIFIER OF IDENTIFIER IS BEGIN_TOK process_list END_TOK IDENTIFIER ';'  */
+#line 317 "src/parser/parser.y"
         {
             // CHIRAG 18-04-26 :: no internal signals ... original rule still works
             // circuits like and_gate have no signal declarations ... this keeps them working
+            // CHIRAG 21-04-26 :: added func_count = 0 explicitly ... walker needs this
             (yyval.node) = ast_new_node(NODE_ARCH);
             (yyval.node)->data.arch.name = strdup((yyvsp[-8].str));
             (yyval.node)->data.arch.entity_name = strdup((yyvsp[-6].str));
@@ -1357,14 +1552,15 @@ yyreduce:
             (yyval.node)->data.arch.process_count = temp_process_count;
             temp_process_count = 0;
             (yyval.node)->data.arch.signal_count = 0;
+            (yyval.node)->data.arch.func_count = 0;
             printf("parsed architecture: %s of %s with %d processes\n",
                 (yyvsp[-8].str), (yyvsp[-6].str), (yyval.node)->data.arch.process_count);
         }
-#line 1364 "src/parser/parser.c"
+#line 1560 "src/parser/parser.c"
     break;
 
-  case 17: /* process_decl: PROCESS '(' identifier_list ')' BEGIN_TOK statement_list END_TOK PROCESS ';'  */
-#line 203 "src/parser/parser.y"
+  case 27: /* process_decl: PROCESS '(' identifier_list ')' BEGIN_TOK statement_list END_TOK PROCESS ';'  */
+#line 337 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_PROCESS);
             // CHIRAG : copy all sensitivity signals, not just first one
@@ -1380,35 +1576,35 @@ yyreduce:
             printf("parsed process with sensitivity: %d signals, statements: %d\n",
                 (yyval.node)->data.process.sensitivity_count, (yyval.node)->data.process.statement_count);
         }
-#line 1384 "src/parser/parser.c"
+#line 1580 "src/parser/parser.c"
     break;
 
-  case 18: /* statement_list: statement  */
-#line 222 "src/parser/parser.y"
+  case 28: /* statement_list: statement  */
+#line 356 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1390 "src/parser/parser.c"
+#line 1586 "src/parser/parser.c"
     break;
 
-  case 19: /* statement_list: statement_list statement  */
-#line 224 "src/parser/parser.y"
+  case 29: /* statement_list: statement_list statement  */
+#line 358 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); }
-#line 1396 "src/parser/parser.c"
+#line 1592 "src/parser/parser.c"
     break;
 
-  case 20: /* statement: signal_assignment  */
-#line 229 "src/parser/parser.y"
+  case 30: /* statement: signal_assignment  */
+#line 363 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); temp_stmts[temp_stmt_count++] = (yyvsp[0].node); }
-#line 1402 "src/parser/parser.c"
+#line 1598 "src/parser/parser.c"
     break;
 
-  case 21: /* statement: if_statement  */
-#line 231 "src/parser/parser.y"
+  case 31: /* statement: if_statement  */
+#line 365 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[0].node); temp_stmts[temp_stmt_count++] = (yyvsp[0].node); }
-#line 1408 "src/parser/parser.c"
+#line 1604 "src/parser/parser.c"
     break;
 
-  case 22: /* signal_assignment: IDENTIFIER ASSIGN expression ';'  */
-#line 236 "src/parser/parser.y"
+  case 32: /* signal_assignment: IDENTIFIER ASSIGN expression ';'  */
+#line 371 "src/parser/parser.y"
         {
             // CHIRAG 21-04-26 :: this part is for when no after delay ... same as before
             // delay_ns = 0 means schedule at delta+1 of current time
@@ -1418,11 +1614,11 @@ yyreduce:
             (yyval.node)->data.assign.delay_ns = 0;
             printf("parsed assignment: %s <=\n", (yyvsp[-3].str));
         }
-#line 1422 "src/parser/parser.c"
+#line 1618 "src/parser/parser.c"
     break;
 
-  case 23: /* signal_assignment: IDENTIFIER ASSIGN expression AFTER_TOK INTEGER NS_TOK ';'  */
-#line 246 "src/parser/parser.y"
+  case 33: /* signal_assignment: IDENTIFIER ASSIGN expression AFTER_TOK INTEGER NS_TOK ';'  */
+#line 381 "src/parser/parser.y"
         {
             // CHIRAG 21-04-26 :: this part is for when after delay is used ... Y <= A and B after 10 ns;
             // delay_ns stores the delay value ... ast_walker uses it to schedule
@@ -1433,11 +1629,11 @@ yyreduce:
             (yyval.node)->data.assign.delay_ns = (yyvsp[-2].num);
             printf("parsed assignment with delay: %s <= after %d ns\n", (yyvsp[-6].str), (yyvsp[-2].num));
         }
-#line 1437 "src/parser/parser.c"
+#line 1633 "src/parser/parser.c"
     break;
 
-  case 24: /* if_statement: IF IDENTIFIER '=' bit_literal THEN statement_list END_TOK IF ';'  */
-#line 260 "src/parser/parser.y"
+  case 34: /* if_statement: IF IDENTIFIER '=' bit_literal THEN statement_list END_TOK IF ';'  */
+#line 395 "src/parser/parser.y"
         {
             // CHIRAG 18-04-26 :: fixed if statement parsing
             // old code never stored inner statements into NODE_IF
@@ -1456,17 +1652,17 @@ yyreduce:
             temp_stmt_count = 0;
             printf("parsed if: %s = '%d' with %d statements\n", (yyvsp[-7].str), (yyvsp[-5].num), (yyval.node)->data.if_stmt.statement_count);
         }
-#line 1460 "src/parser/parser.c"
+#line 1656 "src/parser/parser.c"
     break;
 
-  case 25: /* @1: %empty  */
-#line 278 "src/parser/parser.y"
+  case 35: /* @1: %empty  */
+#line 413 "src/parser/parser.y"
                                                         { (yyval.num) = temp_stmt_count; }
-#line 1466 "src/parser/parser.c"
+#line 1662 "src/parser/parser.c"
     break;
 
-  case 26: /* if_statement: IF IDENTIFIER '=' bit_literal THEN statement_list @1 ELSE_TOK statement_list END_TOK IF ';'  */
-#line 279 "src/parser/parser.y"
+  case 36: /* if_statement: IF IDENTIFIER '=' bit_literal THEN statement_list @1 ELSE_TOK statement_list END_TOK IF ';'  */
+#line 414 "src/parser/parser.y"
         {
             // CHIRAG 18-04-26 :: if with else branch
             // problem here ... both then-block and else-block use temp_stmts
@@ -1498,82 +1694,99 @@ yyreduce:
             temp_stmt_count = 0;
             printf("parsed if-else: %s = '%d' then=%d else=%d\n", (yyvsp[-10].str), (yyvsp[-8].num), then_count, else_count);
         }
-#line 1502 "src/parser/parser.c"
+#line 1698 "src/parser/parser.c"
     break;
 
-  case 27: /* bit_literal: ZERO  */
-#line 313 "src/parser/parser.y"
+  case 37: /* bit_literal: ZERO  */
+#line 448 "src/parser/parser.y"
             { (yyval.num) = 0; }
-#line 1508 "src/parser/parser.c"
+#line 1704 "src/parser/parser.c"
     break;
 
-  case 28: /* bit_literal: ONE  */
-#line 314 "src/parser/parser.y"
+  case 38: /* bit_literal: ONE  */
+#line 449 "src/parser/parser.y"
             { (yyval.num) = 1; }
-#line 1514 "src/parser/parser.c"
+#line 1710 "src/parser/parser.c"
     break;
 
-  case 29: /* expression: IDENTIFIER  */
-#line 319 "src/parser/parser.y"
+  case 39: /* expression: IDENTIFIER  */
+#line 454 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_IDENTIFIER;
             (yyval.node)->data.expr.identifier = strdup((yyvsp[0].str));
         }
-#line 1524 "src/parser/parser.c"
+#line 1720 "src/parser/parser.c"
     break;
 
-  case 30: /* expression: expression AND_TOK expression  */
-#line 325 "src/parser/parser.y"
+  case 40: /* expression: expression AND_TOK expression  */
+#line 460 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_AND;
             (yyval.node)->data.expr.left = (yyvsp[-2].node);
             (yyval.node)->data.expr.right = (yyvsp[0].node);
         }
-#line 1535 "src/parser/parser.c"
+#line 1731 "src/parser/parser.c"
     break;
 
-  case 31: /* expression: expression XOR_TOK expression  */
-#line 332 "src/parser/parser.y"
+  case 41: /* expression: expression XOR_TOK expression  */
+#line 467 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_XOR;
             (yyval.node)->data.expr.left = (yyvsp[-2].node);
             (yyval.node)->data.expr.right = (yyvsp[0].node);
         }
-#line 1546 "src/parser/parser.c"
+#line 1742 "src/parser/parser.c"
     break;
 
-  case 32: /* expression: expression OR_TOK expression  */
-#line 339 "src/parser/parser.y"
+  case 42: /* expression: expression OR_TOK expression  */
+#line 474 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_OR;
             (yyval.node)->data.expr.left = (yyvsp[-2].node);
             (yyval.node)->data.expr.right = (yyvsp[0].node);
         }
-#line 1557 "src/parser/parser.c"
+#line 1753 "src/parser/parser.c"
     break;
 
-  case 33: /* expression: NOT_TOK expression  */
-#line 346 "src/parser/parser.y"
+  case 43: /* expression: NOT_TOK expression  */
+#line 481 "src/parser/parser.y"
         {
             (yyval.node) = ast_new_node(NODE_EXPR);
             (yyval.node)->data.expr.expr_type = EXPR_NOT;
             (yyval.node)->data.expr.left = (yyvsp[0].node);
         }
-#line 1567 "src/parser/parser.c"
+#line 1763 "src/parser/parser.c"
     break;
 
-  case 34: /* expression: '(' expression ')'  */
-#line 352 "src/parser/parser.y"
+  case 44: /* expression: IDENTIFIER '(' arg_list ')'  */
+#line 487 "src/parser/parser.y"
+        {
+            // CHIRAG 21-04-26 :: function call ... majority(A, B, C)
+            // IDENTIFIER followed by ( means its a function call not a signal read
+            // bison lookahead handles the ambiguity ... sees ( after IDENTIFIER = call
+            (yyval.node) = ast_new_node(NODE_FUNC_CALL);
+            (yyval.node)->data.func_call.name = strdup((yyvsp[-3].str));
+            (yyval.node)->data.func_call.arg_count = temp_arg_count;
+            for(int i = 0; i < temp_arg_count; i++)
+                (yyval.node)->data.func_call.args[i] = temp_args[i];
+            temp_arg_count = 0;
+            printf("parsed func call: %s with %d args\n", (yyvsp[-3].str), (yyval.node)->data.func_call.arg_count);
+        }
+#line 1780 "src/parser/parser.c"
+    break;
+
+  case 45: /* expression: '(' expression ')'  */
+#line 500 "src/parser/parser.y"
         { (yyval.node) = (yyvsp[-1].node); }
-#line 1573 "src/parser/parser.c"
+#line 1786 "src/parser/parser.c"
     break;
 
 
-#line 1577 "src/parser/parser.c"
+#line 1790 "src/parser/parser.c"
 
       default: break;
     }
@@ -1766,7 +1979,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 355 "src/parser/parser.y"
+#line 503 "src/parser/parser.y"
 
 
 void yyerror(const char* s)

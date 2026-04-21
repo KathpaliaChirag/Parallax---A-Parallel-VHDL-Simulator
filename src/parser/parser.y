@@ -40,6 +40,19 @@ int temp_sens_count = 0;
 // separate from temp_ports ... ports belong to entity ... these belong to arch
 ASTNode* temp_arch_signals[256];
 int temp_arch_signal_count = 0;
+// CHIRAG 21-04-26 :: temp storage for function declarations
+// functions live between IS and BEGIN in architecture ... like signal decls
+// stored here during parsing ... copied into arch node when rule completes
+ASTNode* temp_funcs[128];
+int temp_func_count = 0;
+
+// temp storage for function parameters during parsing
+char* temp_params[128];
+int temp_param_count = 0;
+
+// temp storage for function call arguments during parsing
+ASTNode* temp_args[128];
+int temp_arg_count = 0;
 %}
 
 %code requires {
@@ -61,13 +74,16 @@ int temp_arch_signal_count = 0;
 %token IF THEN SIGNAL ELSE_TOK
 %token ASSIGN
 %token AFTER_TOK NS_TOK
+%token FUNCTION_TOK RETURN_TOK
 %token <num> INTEGER
 %type <node> program entity_decl architecture_decl
 %type <node> process_decl statement signal_assignment if_statement
 %type <node> expression port_item port_list process_list statement_list
-%type <str>  identifier_list
-%type <num>  bit_literal
 %type <node> signal_decl signal_decl_list
+%type <node> func_decl func_decl_list func_param_list func_param
+%type <node> arg_list
+%type <num>  bit_literal
+%type <str> identifier_list
 
 %left OR_TOK
 %left AND_TOK XOR_TOK
@@ -126,7 +142,70 @@ port_item
             printf("parsed output port: %s\n", $1);
         }
     ;
+func_decl_list
+    : func_decl
+        { $$ = $1; }
+    | func_decl_list func_decl
+        { $$ = $2; }
+    ;
 
+func_decl
+    : FUNCTION_TOK IDENTIFIER '(' func_param_list ')' RETURN_TOK BIT IS BEGIN_TOK RETURN_TOK expression ';' END_TOK FUNCTION_TOK ';'
+        {
+            // CHIRAG 21-04-26 :: function declaration
+            // idea ... support function majority(A:bit; B:bit) return bit is begin return expr; end function;
+            // problem ... functions need their own AST node to store params and body
+            // solution ... NODE_FUNC_DECL stores name, param names, and body expression
+            // only single-return functions supported ... no local variables ... no loops
+            // this covers 90% of useful utility functions in RTL design
+            $$ = ast_new_node(NODE_FUNC_DECL);
+            $$->data.func_decl.name = strdup($2);
+            $$->data.func_decl.param_count = temp_param_count;
+            for(int i = 0; i < temp_param_count; i++)
+                $$->data.func_decl.params[i] = strdup(temp_params[i]);
+            // CHIRAG 21-04-26 :: was $12 before ... counted tokens wrong
+            // FUNCTION_TOK($1) IDENTIFIER($2) '('($3) func_param_list($4) ')'($5) 
+            // RETURN_TOK($6) BIT($7) IS($8) BEGIN_TOK($9) RETURN_TOK($10) expression($11)
+            // so expression is $11 not $12 ... $12 is the semicolon ... no type on semicolons
+            $$->data.func_decl.body = $11;
+            // $$->data.func_decl.body = $12;
+            temp_param_count = 0;
+            temp_funcs[temp_func_count++] = $$;
+            printf("parsed function: %s with %d params\n", $2, $$->data.func_decl.param_count);
+        }
+    ;
+
+func_param_list
+    : func_param
+        { $$ = $1; }
+    | func_param_list ';' func_param
+        { $$ = $3; }
+    ;
+
+func_param
+    : IDENTIFIER ':' BIT
+        {
+            // CHIRAG 21-04-26 :: one function parameter ... A : bit
+            // store name in temp_params ... func_decl rule copies them
+            $$ = ast_new_node(NODE_PORT);
+            $$->data.port.name = strdup($1);
+            temp_params[temp_param_count++] = strdup($1);
+            printf("parsed func param: %s\n", $1);
+        }
+    ;
+
+arg_list
+    : expression
+        {
+            $$ = $1;
+            temp_args[temp_arg_count++] = $1;
+        }
+    | arg_list ',' expression
+        {
+            $$ = $3;
+            temp_args[temp_arg_count++] = $3;
+        }
+    ;
 signal_decl_list
     : signal_decl
         { $$ = $1; }
@@ -164,8 +243,16 @@ process_list
     ;
 
 architecture_decl
-    : ARCHITECTURE IDENTIFIER OF IDENTIFIER IS signal_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'
+    : ARCHITECTURE IDENTIFIER OF IDENTIFIER IS signal_decl_list func_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'
         {
+            // CHIRAG 21-04-26 :: signals + functions + processes ... most complete variant
+            // problem ... old architecture_decl only had 2 variants ... with signals and without
+            // it never referenced func_decl_list so bison marked those rules as useless
+            // fix ... added 4 variants to cover all combinations
+            // variant 1 ... signals + functions + processes ... for circuits like majority_voter
+            // variant 2 ... functions only ... no signal declarations
+            // variant 3 ... signals only ... no functions ... ripple carry adder etc
+            // variant 4 ... neither ... simple circuits like and_gate
             $$ = ast_new_node(NODE_ARCH);
             $$->data.arch.name = strdup($2);
             $$->data.arch.entity_name = strdup($4);
@@ -178,13 +265,18 @@ architecture_decl
                 $$->data.arch.signals[i] = temp_arch_signals[i];
             $$->data.arch.signal_count = temp_arch_signal_count;
             temp_arch_signal_count = 0;
-            printf("parsed architecture: %s of %s with %d processes, %d internal signals\n",
-                $2, $4, $$->data.arch.process_count, $$->data.arch.signal_count);
+            // CHIRAG 21-04-26 :: copy function declarations into arch node
+            for(int i = 0; i < temp_func_count; i++)
+                $$->data.arch.funcs[i] = temp_funcs[i];
+            $$->data.arch.func_count = temp_func_count;
+            temp_func_count = 0;
+            printf("parsed architecture: %s with %d processes, %d signals, %d functions\n",
+                $2, $$->data.arch.process_count, $$->data.arch.signal_count, $$->data.arch.func_count);
         }
-    | ARCHITECTURE IDENTIFIER OF IDENTIFIER IS BEGIN_TOK process_list END_TOK IDENTIFIER ';'
+    | ARCHITECTURE IDENTIFIER OF IDENTIFIER IS func_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'
         {
-            // CHIRAG 18-04-26 :: no internal signals ... original rule still works
-            // circuits like and_gate have no signal declarations ... this keeps them working
+            // CHIRAG 21-04-26 :: functions only ... no signal declarations
+            // for circuits that use helper functions but no internal wires
             $$ = ast_new_node(NODE_ARCH);
             $$->data.arch.name = strdup($2);
             $$->data.arch.entity_name = strdup($4);
@@ -193,11 +285,53 @@ architecture_decl
             $$->data.arch.process_count = temp_process_count;
             temp_process_count = 0;
             $$->data.arch.signal_count = 0;
+            for(int i = 0; i < temp_func_count; i++)
+                $$->data.arch.funcs[i] = temp_funcs[i];
+            $$->data.arch.func_count = temp_func_count;
+            temp_func_count = 0;
+            printf("parsed architecture: %s with %d processes, %d functions\n",
+                $2, $$->data.arch.process_count, $$->data.arch.func_count);
+        }
+    | ARCHITECTURE IDENTIFIER OF IDENTIFIER IS signal_decl_list BEGIN_TOK process_list END_TOK IDENTIFIER ';'
+        {
+            // CHIRAG 18-04-26 :: signals only ... no functions
+            // circuits like and_gate have no signal declarations ... this keeps them working
+            // CHIRAG 21-04-26 :: kept this variant ... func_count set to 0 explicitly
+            $$ = ast_new_node(NODE_ARCH);
+            $$->data.arch.name = strdup($2);
+            $$->data.arch.entity_name = strdup($4);
+            for(int i = 0; i < temp_process_count; i++)
+                $$->data.arch.processes[i] = temp_processes[i];
+            $$->data.arch.process_count = temp_process_count;
+            temp_process_count = 0;
+            // CHIRAG 18-04-26 :: copy internal signals into arch node
+            for(int i = 0; i < temp_arch_signal_count; i++)
+                $$->data.arch.signals[i] = temp_arch_signals[i];
+            $$->data.arch.signal_count = temp_arch_signal_count;
+            temp_arch_signal_count = 0;
+            $$->data.arch.func_count = 0;
+            printf("parsed architecture: %s of %s with %d processes, %d internal signals\n",
+                $2, $4, $$->data.arch.process_count, $$->data.arch.signal_count);
+        }
+    | ARCHITECTURE IDENTIFIER OF IDENTIFIER IS BEGIN_TOK process_list END_TOK IDENTIFIER ';'
+        {
+            // CHIRAG 18-04-26 :: no internal signals ... original rule still works
+            // circuits like and_gate have no signal declarations ... this keeps them working
+            // CHIRAG 21-04-26 :: added func_count = 0 explicitly ... walker needs this
+            $$ = ast_new_node(NODE_ARCH);
+            $$->data.arch.name = strdup($2);
+            $$->data.arch.entity_name = strdup($4);
+            for(int i = 0; i < temp_process_count; i++)
+                $$->data.arch.processes[i] = temp_processes[i];
+            $$->data.arch.process_count = temp_process_count;
+            temp_process_count = 0;
+            $$->data.arch.signal_count = 0;
+            $$->data.arch.func_count = 0;
             printf("parsed architecture: %s of %s with %d processes\n",
                 $2, $4, $$->data.arch.process_count);
         }
     ;
-
+    
 process_decl
     : PROCESS '(' identifier_list ')' BEGIN_TOK statement_list END_TOK PROCESS ';'
         {
@@ -230,6 +364,7 @@ statement
     | if_statement
         { $$ = $1; temp_stmts[temp_stmt_count++] = $1; }
     ;
+
 
 signal_assignment
     : IDENTIFIER ASSIGN expression ';'
@@ -347,6 +482,19 @@ expression
             $$ = ast_new_node(NODE_EXPR);
             $$->data.expr.expr_type = EXPR_NOT;
             $$->data.expr.left = $2;
+        }
+    | IDENTIFIER '(' arg_list ')'
+        {
+            // CHIRAG 21-04-26 :: function call ... majority(A, B, C)
+            // IDENTIFIER followed by ( means its a function call not a signal read
+            // bison lookahead handles the ambiguity ... sees ( after IDENTIFIER = call
+            $$ = ast_new_node(NODE_FUNC_CALL);
+            $$->data.func_call.name = strdup($1);
+            $$->data.func_call.arg_count = temp_arg_count;
+            for(int i = 0; i < temp_arg_count; i++)
+                $$->data.func_call.args[i] = temp_args[i];
+            temp_arg_count = 0;
+            printf("parsed func call: %s with %d args\n", $1, $$->data.func_call.arg_count);
         }
     | '(' expression ')'
         { $$ = $2; }

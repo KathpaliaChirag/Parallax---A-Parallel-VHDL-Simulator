@@ -114,6 +114,22 @@ void ast_print(ASTNode* node, int depth)
                     break;
             }
             break;
+        case NODE_FUNC_DECL:
+            // CHIRAG 21-04-26 :: print function declaration for debug
+            printf("FUNC_DECL: %s (%d params)\n",
+                node->data.func_decl.name,
+                node->data.func_decl.param_count);
+            ast_print(node->data.func_decl.body, depth + 1);
+            break;
+
+        case NODE_FUNC_CALL:
+            // CHIRAG 21-04-26 :: print function call for debug
+            printf("FUNC_CALL: %s (%d args)\n",
+                node->data.func_call.name,
+                node->data.func_call.arg_count);
+            for(int i = 0; i < node->data.func_call.arg_count; i++)
+                ast_print(node->data.func_call.args[i], depth + 1);
+            break;  
     }
 }
 

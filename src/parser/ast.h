@@ -22,6 +22,11 @@ typedef enum {
     NODE_ASSIGN,      // Y <= A and B;
     NODE_IF,          // if CLK = '1' then ... end if;
     NODE_EXPR,        // expressions.... AND OR NOT IDENTIFIER
+    // CHIRAG 21-04-26 :: function support
+    // NODE_FUNC_DECL ... stores function name, params, body expression
+    // NODE_FUNC_CALL ... stores function name and call arguments
+    NODE_FUNC_DECL,
+    NODE_FUNC_CALL,
 } NodeType;
 
 typedef enum {
@@ -79,6 +84,11 @@ struct ASTNode {
             // signal CARRY : bit; between IS and BEGIN goes here
             ASTNode* signals[MAX_CHILDREN];
             int signal_count;
+            // CHIRAG 21-04-26 :: added funcs array for function declarations
+            // functions declared between IS and BEGIN in architecture
+            // walker registers them before processing any process nodes
+            ASTNode* funcs[MAX_CHILDREN];
+            int func_count;
         } arch;
         // process node.... sensitivity list and statements
         struct {
@@ -86,6 +96,9 @@ struct ASTNode {
             int sensitivity_count;
             ASTNode* statements[MAX_CHILDREN];
             int statement_count;
+            // CHIRAG 21-04-26 :: function declarations in architecture
+            ASTNode* funcs[MAX_CHILDREN];
+            int func_count;
         } process;
 
        struct {
@@ -111,6 +124,24 @@ struct ASTNode {
             ASTNode* else_statements[MAX_CHILDREN];
             int else_statement_count;
         } if_stmt;
+        // CHIRAG 21-04-26 :: function declaration node
+        // stores name, parameter names, and body expression
+        // body is a single return expression ... no local vars ... no loops
+        struct {
+            char* name;
+            char* params[MAX_CHILDREN];
+            int param_count;
+            ASTNode* body;
+        } func_decl;
+
+        // CHIRAG 21-04-26 :: function call node
+        // stores function name and argument expressions
+        // ast_walker evaluates by finding matching func_decl and substituting args
+        struct {
+            char* name;
+            ASTNode* args[MAX_CHILDREN];
+            int arg_count;
+        } func_call;
 
         // expression node.... AND OR NOT or just an identifier
         struct {

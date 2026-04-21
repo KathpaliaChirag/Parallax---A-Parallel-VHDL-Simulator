@@ -66,6 +66,40 @@ typedef struct {
 static ProcessContext* proc_contexts = NULL;
 static int proc_context_count = 0;
 static int proc_contexts_capacity = 0;
+// CHIRAG 21-04-26 :: function registry ... stores all declared functions
+// when walker sees NODE_FUNC_DECL it stores it here
+// when eval_expr sees NODE_FUNC_CALL it looks up function here by name
+// simple linear search ... small N ... fine
+typedef struct {
+    char* name;
+    ASTNode* func_node;
+} FuncEntry;
+
+static FuncEntry* func_registry = NULL;
+static int func_count = 0;
+static int func_capacity = 0;
+
+static void register_func(ASTNode* func_node)
+{
+    // CHIRAG 21-04-26 :: add function to registry ... same realloc pattern as proc_contexts
+    if(func_count >= func_capacity)
+    {
+        func_capacity = func_capacity == 0 ? 8 : func_capacity * 2;
+        func_registry = realloc(func_registry, func_capacity * sizeof(FuncEntry));
+    }
+    func_registry[func_count].name = func_node->data.func_decl.name;
+    func_registry[func_count].func_node = func_node;
+    func_count++;
+    printf("walker: registered function %s\n", func_node->data.func_decl.name);
+}
+
+static ASTNode* find_func(char* name)
+{
+    for(int i = 0; i < func_count; i++)
+        if(strcmp(func_registry[i].name, name) == 0)
+            return func_registry[i].func_node;
+    return NULL;
+} 
 
 // CHIRAG : set this before calling run_simulation
 // process run functions insert events into this queue
@@ -90,11 +124,129 @@ static int proc_contexts_capacity = 0;
 // CHIRAG 15-04-26 :: one queue pointer per thread ... thread N uses walker_queues[N]
 // replaces threadprivate approach which caused linker issues with bison generated parser
 EventQueue* walker_queues[64];
+// -------------------------------------------------------------------------
+//old implementation ahad problem so fixed it with a new one taken help of AI here 
 // CHIRAG : walk an expression AST node and compute the result
 // reads current signal values from the signals array
+// static int eval_expr(ASTNode* expr, DynArray_Signal* signals)
+// {
+//     if(expr == NULL) return 0;
+//     switch(expr->data.expr.expr_type)
+//     {
+//         case EXPR_IDENTIFIER:
+//         {
+//             Signal* s = find_signal(signals, expr->data.expr.identifier);
+//             return s ? s->value : 0;
+//         }
+//         case EXPR_AND:
+//             return eval_expr(expr->data.expr.left, signals)
+//                  & eval_expr(expr->data.expr.right, signals);
+//         case EXPR_OR:
+//             return eval_expr(expr->data.expr.left, signals)
+//                  | eval_expr(expr->data.expr.right, signals);
+//         case EXPR_XOR:
+//             // CHIRAG 18-04-26 :: xor ... A xor B = A^B in C ... 1 if exactly one input is 1
+//             return eval_expr(expr->data.expr.left, signals) ^ eval_expr(expr->data.expr.right, signals);
+//         case EXPR_NOT:
+//             return !eval_expr(expr->data.expr.left, signals);
+//         case EXPR_BIT_LITERAL:
+//             return expr->data.expr.bit_value;
+//         case EXPR_FUNC_CALL:
+//         {
+//             // CHIRAG 21-04-26 :: evaluate a function call inline
+//             // idea ... find the function declaration ... bind args to params ... eval body
+//             // problem ... functions have their own param names like A B C
+//             //             but caller passes signals like IN0 IN1 IN2
+//             //             we need to substitute caller args for param names during eval
+//             // solution ... build a temporary local signal array
+//             //             copy caller arg values into it under param names
+//             //             eval body expression using local array instead of global signals
+//             // why not modify global signals? ... that would corrupt simulation state
+//             // local array is stack allocated ... thrown away after function returns
+//             ASTNode* func = find_func(expr->data.expr.identifier);
+//             if(func == NULL) return 0;
+
+//             // build local signal array ... one entry per parameter
+//             // each entry has param name and value from caller argument
+//             DynArray_Signal local_sigs;
+//             DYNARRAY_INIT(local_sigs);
+//             for(int i = 0; i < func->data.func_decl.param_count; i++)
+//             {
+//                 Signal s;
+//                 s.name = func->data.func_decl.params[i];
+//                 // evaluate caller argument to get value
+//                 s.value = eval_expr(func->data.func_decl.args_at_call[i], signals);
+//                 s.value_next = s.value;
+//                 s.prev_value = s.value;
+//                 s.direction = 0;
+//                 s.last_change_on = 0;
+//                 s.last_change_delta = 0;
+//                 s.vcd_symbol = 0;
+//                 DYNARRAY_INSERT(local_sigs, s);
+//             }
+//             // eval body with local signals
+//             int result = eval_expr(func->data.func_decl.body, &local_sigs);
+//             free(local_sigs.data);
+//             return result;
+//         }
+//         default: return 0;
+//     }
+// }
+
 static int eval_expr(ASTNode* expr, DynArray_Signal* signals)
 {
     if(expr == NULL) return 0;
+
+    // CHIRAG 21-04-26 :: handle function calls BEFORE the switch
+    // problem with old approach ... old code had EXPR_FUNC_CALL inside the switch
+    // but that switch is on expr->data.expr.expr_type ... only valid when expr->type == NODE_EXPR
+    // a function call node has type NODE_FUNC_CALL ... not NODE_EXPR
+    // so expr->data.expr.expr_type was reading garbage memory ... undefined behavior
+    // also old code used func->data.func_decl.args_at_call which doesnt exist in our AST
+    // args live in the CALL node ... not the declaration node
+    // fix ... check node type first before touching expr_type ... handle func call here
+    if(expr->type == NODE_FUNC_CALL)
+    {
+        ASTNode* func = find_func(expr->data.func_call.name);
+        if(func == NULL)
+        {
+            printf("eval_expr: unknown function %s\n", expr->data.func_call.name);
+            return 0;
+        }
+
+        // CHIRAG 21-04-26 :: argument substitution ... core of function evaluation
+        // idea ... find the function declaration ... bind args to params ... eval body
+        // problem ... functions have their own param names like A B C
+        //             but caller passes signals like IN0 IN1 IN2
+        //             we need to substitute caller args for param names during eval
+        // solution ... build a temporary local signal array
+        //             copy caller arg values into it under param names
+        //             eval body expression using local array instead of global signals
+        // why not modify global signals? ... that would corrupt simulation state
+        // local array is freed after function returns ... no memory leak
+        DynArray_Signal local_sigs;
+        DYNARRAY_INIT(local_sigs);
+        for(int i = 0; i < func->data.func_decl.param_count && i < expr->data.func_call.arg_count; i++)
+        {
+            Signal s;
+            memset(&s, 0, sizeof(Signal));
+            s.name = func->data.func_decl.params[i];
+            // evaluate caller argument against GLOBAL signals
+            // so majority(A, B, C) ... A B C are looked up in global signal array
+            // args[i] lives in the CALL node ... not the decl node ... old code got this wrong
+            s.value = eval_expr(expr->data.func_call.args[i], signals);
+            s.value_next = s.value;
+            s.prev_value = s.value;
+            DYNARRAY_INSERT(local_sigs, s);
+        }
+
+        // evaluate function body against LOCAL signals ... not global
+        // so inside majority() ... A B C refer to params not global signals
+        int result = eval_expr(func->data.func_decl.body, &local_sigs);
+        free(local_sigs.data);
+        return result;
+    }
+
     switch(expr->data.expr.expr_type)
     {
         case EXPR_IDENTIFIER:
@@ -118,7 +270,7 @@ static int eval_expr(ASTNode* expr, DynArray_Signal* signals)
         default: return 0;
     }
 }
-
+// --------------------------------------------------------------------------------------
 // CHIRAG : generic run logic.... called directly by scheduler now via function pointer
 // evaluates expression, finds target signal, inserts output event
 // CHIRAG 02-04-26 :: this is now THE run function for every process
@@ -375,11 +527,18 @@ static void walk_node(ASTNode* node, DynArray_Signal* signals, Scheduler* sch)
                 // why first? ... processes reference these signals by name
                 // if we walk processes first ... find_signal returns NULL ... process cant find CARRY etc
                 // signals must exist in the array before any process tries to read/write them
+                // CHIRAG 21-04-26 :: register functions FIRST before signals and processes
+                // why first? ... processes may call functions ... functions must be known before eval
+                // old code only walked signals then processes ... functions were never registered
+                // fix ... loop over arch.funcs and call register_func for each one
+                for(int i = 0; i < node->data.arch.func_count; i++)
+                    register_func(node->data.arch.funcs[i]);
+                // walk internal signals before processes ... signals must exist before processes reference them
                 for(int i = 0; i < node->data.arch.signal_count; i++)
                     walk_node(node->data.arch.signals[i], signals, sch);
                 for(int i = 0; i < node->data.arch.process_count; i++)
                     walk_node(node->data.arch.processes[i], signals, sch);
-                break;
+            break;
         case NODE_PROCESS:
         {
             printf("walker: creating process with %d sensitivity signals\n",

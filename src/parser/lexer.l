@@ -74,6 +74,8 @@
 "signal"        { return SIGNAL; }
 "after"         { return AFTER_TOK; }
 "ns"            { return NS_TOK; }
+"function"      { return FUNCTION_TOK; }
+"return"        { return RETURN_TOK; }
 [0-9]+          { yylval.num = atoi(yytext); return INTEGER; }
 \'0\'           { yylval.num = 0; return ZERO; }
 \'1\'           { yylval.num = 1; return ONE; }
