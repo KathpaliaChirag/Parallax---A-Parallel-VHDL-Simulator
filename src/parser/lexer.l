@@ -69,6 +69,7 @@
 "xor"           { return XOR_TOK; }
 "not"           { return NOT_TOK; }
 "if"            { return IF; }
+"else"          { return ELSE_TOK; }
 "then"          { return THEN; }
 "signal"        { return SIGNAL; }
 [a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); return IDENTIFIER; }

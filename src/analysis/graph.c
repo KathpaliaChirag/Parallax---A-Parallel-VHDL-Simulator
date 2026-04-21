@@ -143,3 +143,59 @@ void graph_free(DepGraph* g)
     free(g->color);
     free(g);
 }
+
+// cool so now i am going to add some visualisation and inspiration and help for that is taken with help of AI 
+void graph_write_dot(DepGraph* g, const char* filename)
+{
+    // CHIRAG 20-04-26 :: so idea is really simple we make DOT file output for graphviz visualization
+    // idea goes like this... dependency graph is hard to read as a matrix ... an image works way better for us...
+    // problem which i found was ... adj matrix printed to terminal is unreadable for large circuits
+    // solution ... write a .dot file ... graphviz renders it to PNG in one command
+    // visual design assisted by Claude (Anthropic) ... architecture and integration is mine
+    // how to use after sim runs ...
+    // dot -Tpng dependency.dot -o graph.png
+    // then open graph.png ... colored nodes = parallel batch ... edges = conflicts
+    // color mapping ... each parallel batch gets a distinct fill color
+    // same color = safe to run simultaneously = no shared signals between them
+    // different color = must run in separate batches = shared signal exists
+
+    FILE* f = fopen(filename, "w");
+    if(f == NULL) { printf("cant open dot file %s\n", filename); return; }
+
+    // using graph not digraph ... dependency edges are undirected ... conflict is symmetric
+    // if proc0 conflicts with proc1 ... proc1 also conflicts with proc0
+    fprintf(f, "graph dependency {\n");
+    fprintf(f, "    rankdir=LR;\n");
+    fprintf(f, "    label=\"Parallax Dependency Graph\\n");
+    fprintf(f, "nodes=%d  edges=%d  colors=%d\";\n", g->num_nodes, g->num_edges, g->num_colors);
+    fprintf(f, "    labelloc=t;\n");
+    fprintf(f, "    fontsize=14;\n");
+    fprintf(f, "    node [shape=circle, style=filled, fontsize=12];\n");
+
+    // node colors per parallel batch ... up to 6 colors ... more than enough for real circuits
+    const char* fillcolors[] = {
+        "lightblue", "lightyellow", "lightgreen",
+        "lightsalmon", "plum", "lightcyan"
+    };
+    int num_available = 6;
+
+    // write one node per process ... label shows proc id and color/batch number
+    for(int i = 0; i < g->num_nodes; i++)
+    {
+        int c = g->color[i];
+        const char* fill = (c < num_available) ? fillcolors[c] : "white";
+        fprintf(f, "    proc%d [label=\"proc%d\\nbatch %d\", fillcolor=%s];\n",
+            i, i, c, fill);
+    }
+
+    // write edges ... upper triangle only ... adj is symmetric so i<j avoids duplicates
+    for(int i = 0; i < g->num_nodes; i++)
+        for(int j = i+1; j < g->num_nodes; j++)
+            if(g->adj[i][j])
+                fprintf(f, "    proc%d -- proc%d;\n", i, j);
+
+    fprintf(f, "}\n");
+    fclose(f);
+    printf("dot file written: %s\n", filename);
+    printf("render cmd: dot -Tpng %s -o graph.png\n", filename);
+}

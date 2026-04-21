@@ -255,39 +255,46 @@ void run_proc_generic(int idx)
             printf("eval: %s <= %d at t=%.1f d=%d\n",
                 target->name, result, current_time, delta + 1);
         }
+
         else if(stmt->type == NODE_IF)
         {
-            // CHIRAG 18-04-26 :: if statement ... if CLK = '1' then ... end if
-            //
-            // how DFF works in VHDL ...
-            // process(CLK) ... wakes up when CLK changes
-            // if CLK = '1' then Q <= D; end if;
-            // so process fires on both rising and falling edge
-            // but only updates Q on rising edge (CLK='1')
-            // the if statement is what implements edge detection
-            //
-            // our implementation ...
-            // find the condition signal (CLK)
-            // check if its current value equals the expected bit value ('1' = 1)
-            // if yes ... execute all statements inside the if block
-            // if no ... skip ... process did nothing this delta
             Signal* cond_sig = find_signal(ctx->signals, stmt->data.if_stmt.signal_name);
             if(cond_sig == NULL) continue;
 
             if(cond_sig->value == stmt->data.if_stmt.bit_value)
             {
-                // condition true ... execute inner statements
+                // CHIRAG 18-04-26 :: condition true ... run then-block ... same as before
                 for(int j = 0; j < stmt->data.if_stmt.statement_count; j++)
                 {
                     ASTNode* inner = stmt->data.if_stmt.statements[j];
                     if(inner == NULL || inner->type != NODE_ASSIGN) continue;
-
                     Signal* target = find_signal(ctx->signals, inner->data.assign.target);
                     if(target == NULL) continue;
-
                     int result = eval_expr(inner->data.assign.expr, ctx->signals);
                     if(result == target->value) continue;
-
+                    Event e;
+                    e.signal_name = target->name;
+                    e.new_value   = result;
+                    e.time        = current_time;
+                    e.delta       = delta + 1;
+                    e.type        = 0;
+                    insert_ele(q, e);
+                    printf("eval: %s <= %d at t=%.1f d=%d\n",
+                        target->name, result, current_time, delta + 1);
+                }
+            }
+            else
+            {
+                // CHIRAG 18-04-26 :: condition false ... run else-block if it exists
+                // no else-block ... else_statement_count = 0 ... loop does nothing ... correct
+                for(int j = 0; j < stmt->data.if_stmt.else_statement_count; j++)
+                {
+                    ASTNode* inner = stmt->data.if_stmt.else_statements[j];
+                    if(inner == NULL || inner->type != NODE_ASSIGN) continue;
+                    Signal* target = find_signal(ctx->signals, inner->data.assign.target);
+                    if(target == NULL) continue;
+                    int result = eval_expr(inner->data.assign.expr, ctx->signals);
+                    if(result == target->value) continue;
                     Event e;
                     e.signal_name = target->name;
                     e.new_value   = result;

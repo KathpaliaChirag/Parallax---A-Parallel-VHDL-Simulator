@@ -58,7 +58,7 @@ int temp_arch_signal_count = 0;
 %token BEGIN_TOK END_TOK IS OF
 %token IN_TOK OUT_TOK BIT
 %token AND_TOK OR_TOK NOT_TOK XOR_TOK
-%token IF THEN SIGNAL
+%token IF THEN SIGNAL ELSE_TOK
 %token ASSIGN
 
 %type <node> program entity_decl architecture_decl
@@ -260,6 +260,38 @@ if_statement
             temp_stmt_count = 0;
             printf("parsed if: %s = '%d' with %d statements\n", $2, $4, $$->data.if_stmt.statement_count);
         }
+    | IF IDENTIFIER '=' bit_literal THEN statement_list { $<num>$ = temp_stmt_count; } ELSE_TOK statement_list END_TOK IF ';'
+        {
+            // CHIRAG 18-04-26 :: if with else branch
+            // problem here ... both then-block and else-block use temp_stmts
+            // by the time we reach this action ... temp_stmts has ONLY the else statements
+            // why? ... then-block statements were already consumed by first statement_list
+            // and temp_stmt_count was reset by ... wait no it wasnt reset between the two lists
+            // so temp_stmts has ALL statements ... then + else concatenated
+            // we cant split them here cleanly without knowing where then ends
+            //
+            // fix ... use a separator ... save then-count before parsing else
+            // but bison actions run AFTER the whole rule matches ... too late
+            //
+            // real fix ... use a mid-rule action to snapshot temp_stmt_count
+            // after first statement_list but before ELSE_TOK
+            // $<num>5 trick ... store count in a typed mid-rule slot
+            $$ = ast_new_node(NODE_IF);
+            $$->data.if_stmt.signal_name = strdup($2);
+            $$->data.if_stmt.bit_value = $4;
+            // then-block count was saved by mid-rule action into $6
+            // else-block is everything after that
+            int then_count = $<num>7;
+            int else_count = temp_stmt_count - then_count;
+            $$->data.if_stmt.statement_count = then_count;
+            for(int i = 0; i < then_count; i++)
+                $$->data.if_stmt.statements[i] = temp_stmts[i];
+            $$->data.if_stmt.else_statement_count = else_count;
+            for(int i = 0; i < else_count; i++)
+                $$->data.if_stmt.else_statements[i] = temp_stmts[then_count + i];
+            temp_stmt_count = 0;
+            printf("parsed if-else: %s = '%d' then=%d else=%d\n", $2, $4, then_count, else_count);
+        }
     ;
 
 bit_literal
@@ -340,6 +372,8 @@ int main(int argc, char* argv[])
     // same color = no conflicts = can run in parallel
     DepGraph* g = graph_build(sch.process_ARRAY.size);
     dependency_extract(ast_root, g);
+    // CHIRAG 20-04-26 :: write DOT file right after graph is built and colored
+    graph_write_dot(g, "dependency.dot");
     // graph_free(g);
 
     EventQueue eq = init_queue();
@@ -464,6 +498,20 @@ int main(int argc, char* argv[])
     // CHIRAG 13-04-26 :: print hash at end ... this is the correctness contract
     // sequential hash must equal parallel hash later ... if they differ there is a bug
     printf("trace hash: %u\n", trace_hash());
+    // CHIRAG 20-04-26 :: print simulation stats
+    // idea ... give user insight into what the sim actually did internally
+    // problem ... before this ... black box ... hash and values but no internal metrics
+    // solution ... four counters updated throughout sim ... printed here at end
+    // delta_count tells how many delta cycles ran ... feedback chain depth story
+    // event_count tells how many external stimulus events were processed
+    // process_firings tells how many times processes actually executed
+    // max_delta_depth is the most interesting ... deepest feedback chain seen
+    printf("\n--- simulation stats ---\n");
+    printf("total delta cycles    : %d\n", stat_delta_count);
+    printf("total events processed: %d\n", stat_event_count);
+    printf("total process firings : %d\n", stat_process_firings);
+    printf("max delta depth       : %d\n", stat_max_delta_depth);
+    printf("------------------------\n");
     graph_free(g); 
     vcd_close();
     return 0;

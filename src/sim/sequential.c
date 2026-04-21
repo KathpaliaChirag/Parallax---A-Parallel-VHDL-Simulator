@@ -34,21 +34,26 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
                 for(int i=0 ; i < signal->size; i++)
                 if(strcmp(signal->data[i].name, e.signal_name) == 0)
                 {
-                // CHIRAG 02-04-26 :: write to value_next not value directly
-                // processes will read frozen value during this delta
-                // value_next holds the pending update until delta boundary
-                // signal->data[i].prev_value = signal->data[i].value;
-                // signal->data[i].value= e.new_value;
-                signal->data[i].value_next= e.new_value;
-                signal->data[i].last_change_delta = delta; 
-                signal->data[i].last_change_on = current_time;
-                    
-                // CHIRAG 17-03-26 : will add VCD Change here 
-                // vcd_write_change();
-                vcd_write_change(signal->data[i], current_time);
-                trace_record(signal->data[i], current_time);
-                // scheduler_notify(sch, signal->data[i]);
-                changed=1;
+                    // CHIRAG 02-04-26 :: write to value_next not value directly
+                    // processes will read frozen value during this delta
+                    // value_next holds the pending update until delta boundary
+                    // signal->data[i].prev_value = signal->data[i].value;
+                    // signal->data[i].value= e.new_value;
+                    signal->data[i].value_next= e.new_value;
+                    signal->data[i].last_change_delta = delta; 
+                    signal->data[i].last_change_on = current_time;
+
+                    // CHIRAG 17-03-26 : will add VCD Change here 
+                    // vcd_write_change();
+                    vcd_write_change(signal->data[i], current_time);
+                    trace_record(signal->data[i], current_time);
+                    // scheduler_notify(sch, signal->data[i]);
+                    changed=1;
+                    // CHIRAG 20-04-26 :: stat -- count every event that applies to a signal
+                    // idea ... know how many stimulus events the circuit actually processed
+                    // problem ... extract_min pops anything ... not all pops hit a signal
+                    // solution ... count only here ... inside the signal match ... real event
+                    stat_event_count++;
                 }
                 
             }
@@ -73,7 +78,7 @@ void run_simulation(EventQueue* p, Scheduler* sch, DynArray_Signal* signal)
             for(int i = 0; i < sch->process_ARRAY.size; i++)
                 sch->process_ARRAY.data[i].notified = 0;
             if(changed)
-            advance_delta();
+                advance_delta();
             
             
         } while(detect_change());

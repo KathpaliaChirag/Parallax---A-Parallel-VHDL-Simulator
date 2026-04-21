@@ -63,6 +63,11 @@ void run_parallel_simulation(EventQueue* p, Scheduler* sch,
                     vcd_write_change(signal->data[i], current_time);
                     trace_record(signal->data[i], current_time);
                     changed = 1;
+                    // CHIRAG 20-04-26 :: stat - count every event that applies to a signal
+                    // idea ... know how many stimulus events the circuit actually processed
+                    // problem ... extract_min pops anything ... not all pops hit a signal
+                    // solution ... count only here ... inside the signal match ... real event
+                    stat_event_count++;
                 }
             }
 
@@ -134,6 +139,12 @@ void run_parallel_simulation(EventQueue* p, Scheduler* sch,
 
                     // run the process ... same run_proc_generic as sequential
                     sch->process_ARRAY.data[proc_idx].run(proc_idx);
+                    // CHIRAG 20-04-26 :: stat - count process firings in parallel mode
+                    // idea ... track total process executions for parallelism analysis
+                    // problem ... parallel fires processes inside omp loop ... no central notify
+                    // solution ... count here right after run() ... each thread counts its own
+                    // slight undercounting possible if omp reorders but acceptable for stats
+                    stat_process_firings++;
                 }
                 // implicit omp barrier here ... all threads finish color batch before next batch starts
             }

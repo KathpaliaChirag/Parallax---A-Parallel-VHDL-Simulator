@@ -81,7 +81,8 @@ extern int yydebug;
     IF = 276,                      /* IF  */
     THEN = 277,                    /* THEN  */
     SIGNAL = 278,                  /* SIGNAL  */
-    ASSIGN = 279                   /* ASSIGN  */
+    ELSE_TOK = 279,                /* ELSE_TOK  */
+    ASSIGN = 280                   /* ASSIGN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -96,7 +97,7 @@ union YYSTYPE
     int num;
     ASTNode* node;
 
-#line 100 "src/parser/parser.h"
+#line 101 "src/parser/parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

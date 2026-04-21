@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include "scheduler.h"
+#include "delta.h"
 #include <string.h>
 Scheduler scheduler_init()
 {
@@ -33,6 +34,11 @@ void scheduler_notify(Scheduler* sch, Signal s)
             // CHIRAG 02-04-26 06:01 :: changed run call added ctx_idx
             sch->process_ARRAY.data[i].notified = 1;
             sch->process_ARRAY.data[i].run(sch->process_ARRAY.data[i].ctx_idx);
+            // CHIRAG 20-04-26 :: no nest thing we need to do is count every process firing
+            // idea is simple and executable ... track how many times processes actually ran across whole simulation
+            // solution ... increment here because this is THE one place sequential mode fires a process
+            // parallel.c has its own counter in the omp loop
+            stat_process_firings++;
             printf("process woke up %s", sch->process_ARRAY.data[i].name);
         }
     }

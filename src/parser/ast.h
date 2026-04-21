@@ -96,10 +96,15 @@ struct ASTNode {
 
         // if node.... if CLK = '1' then ... end if
         struct {
-            char* signal_name;  // CLK
-            int bit_value;      // 0 or 1
+            char* signal_name;
+            int bit_value;
             ASTNode* statements[MAX_CHILDREN];
             int statement_count;
+            // CHIRAG 18-04-26 :: added else branch
+            // if CLK='1' then ... else ... end if
+            // else_statements is empty if no else branch present
+            ASTNode* else_statements[MAX_CHILDREN];
+            int else_statement_count;
         } if_stmt;
 
         // expression node.... AND OR NOT or just an identifier
