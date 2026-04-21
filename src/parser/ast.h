@@ -46,7 +46,7 @@ typedef struct ASTNode ASTNode;
 
 // CHIRAG : dynamic array of ASTNode pointers.... for lists of ports, processes, statements
 // using a simple fixed array for now.... can make dynamic later if needed
-#define MAX_CHILDREN 32
+#define MAX_CHILDREN 256
 
 // CHIRAG : the main AST node struct
 // type field tells me which union member to look at

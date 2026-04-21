@@ -1,0 +1,75 @@
+$timescale 1ns $end
+$var wire 1 ! IN0 $end
+$var wire 1 " OUT7 $end
+$var wire 1 # W1 $end
+$var wire 1 $ W2 $end
+$var wire 1 % W3 $end
+$var wire 1 & W4 $end
+$var wire 1 ' W5 $end
+$var wire 1 ( W6 $end
+$var wire 1 ) W7 $end
+$dumpvars
+0!
+0"
+0#
+0$
+0%
+0&
+0'
+0(
+0)
+$end
+#1
+0!
+#1
+0#
+#1
+0$
+#1
+0%
+#1
+0&
+#1
+0'
+#1
+0(
+#1
+0)
+#1
+0"
+#2
+1!
+#2
+1#
+#2
+1$
+#2
+1%
+#2
+1&
+#2
+1'
+#2
+1(
+#2
+1)
+#2
+1"
+#3
+0!
+#3
+0#
+#3
+0$
+#3
+0%
+#3
+0&
+#3
+0'
+#3
+0(
+#3
+0)
+#3
+0"

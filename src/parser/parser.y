@@ -27,18 +27,18 @@ extern struct ASTNode* ast_entity;
 // CHIRAG 19-03-26 :: temporary storage during parsing
 // ports and processes are collected here as they are parsed
 // then copied into the entity/arch node when that rule completes
-ASTNode* temp_ports[32];
-ASTNode* temp_stmts[32];
+ASTNode* temp_ports[256];
+ASTNode* temp_stmts[256];
 int temp_stmt_count = 0;
 int temp_port_count = 0;
-ASTNode* temp_processes[32];
+ASTNode* temp_processes[256];
 int temp_process_count = 0;
-char* temp_sens[32];
+char* temp_sens[256];
 int temp_sens_count = 0;
 // CHIRAG 18-04-26 :: temp storage for internal signal declarations
 // signal CARRY : bit; between IS and BEGIN goes here
 // separate from temp_ports ... ports belong to entity ... these belong to arch
-ASTNode* temp_arch_signals[32];
+ASTNode* temp_arch_signals[256];
 int temp_arch_signal_count = 0;
 %}
 
@@ -397,7 +397,11 @@ int main(int argc, char* argv[])
     // mode 1 ... manual testbench file passed as argv[2]
     // format is simple ... SIGNAL_NAME VALUE TIME ... one per line ... # for comments
     // mode 2 ... auto generate input combinations ... capped at 16 so output stays readable
-    if(argc > 2)
+   // if(argc > 2)
+   // CHIRAG 20-04-26 :: check argv[2] is actually a testbench not a mode flag
+    // when no TB given ... makefile passes --seq as argv[2] ... old check opened it as file
+    // fix ... if argv[2] starts with "--" its a mode flag not a testbench ... skip to auto mode
+    if(argc > 2 && argv[2][0] != '-')
     {
         // manual testbench mode ... user controls exactly what gets tested
         // good for sequential circuits ... clocks ... specific scenarios
@@ -479,9 +483,15 @@ int main(int argc, char* argv[])
     // omp_get_wtime() measures wall clock time ... actual real world time user waited
     // speedup = seq_wall_time / par_wall_time ... this is why we never use clock to test speedup
     int use_parallel = 1;
-    if(argc > 3 && strcmp(argv[3], "--seq") == 0)
+    // if(argc > 3 && strcmp(argv[3], "--seq") == 0)
+    //     use_parallel = 0;
+    // NEW -- CHIRAG 21-04-26 :: fix mode detection when no TB file given
+    // old code assumed argv[3] always has mode flag ... only true when TB is present
+    // when no TB ... argv[2] is the mode flag ... argv[3] doesnt exist
+    // fix ... check both argv[2] and argv[3] for --seq flag
+    if((argc > 2 && strcmp(argv[2], "--seq") == 0) ||
+       (argc > 3 && strcmp(argv[3], "--seq") == 0))
         use_parallel = 0;
-
     double t_start = omp_get_wtime();
     if(use_parallel)
         run_parallel_simulation(&eq, &sch, &signals, g);
@@ -506,12 +516,30 @@ int main(int argc, char* argv[])
     // event_count tells how many external stimulus events were processed
     // process_firings tells how many times processes actually executed
     // max_delta_depth is the most interesting ... deepest feedback chain seen
-    printf("\n--- simulation stats ---\n");
+    printf("\n----> simulation stats <----\n");
     printf("total delta cycles    : %d\n", stat_delta_count);
     printf("total events processed: %d\n", stat_event_count);
     printf("total process firings : %d\n", stat_process_firings);
     printf("max delta depth       : %d\n", stat_max_delta_depth);
-    printf("------------------------\n");
+    printf("--------------------------\n");
+     // CHIRAG 21-04-26 :: Amdahl's law theoretical speedup
+    // idea ... show what speedup is theoretically possible given our parallel fraction
+    // problem ... measured times on small circuits are noisy ... timer resolution too coarse
+    // solution ... compute theoretical Amdahl numbers from graph structure
+    // serial fraction S = 1 / num_colors ... one color batch must run serially before next
+    // if all processes same color ... S is just overhead fraction ... estimate 0.3
+    // Amdahl ... Speedup(N) = 1 / (S + (1-S)/N)
+    // this gives upper bound on speedup ... real speedup will be lower due to overhead
+    float S = (g->num_colors > 1) ? (1.0f / g->num_colors) : 0.3f;
+    printf("\n--- amdahl's law (theoretical) ---\n");
+    printf("serial fraction S     : %.2f\n", S);
+    printf("parallel fraction     : %.2f\n", 1.0f - S);
+    for(int n = 1; n <= 16; n *= 2)
+    {
+        float speedup = 1.0f / (S + (1.0f - S) / n);
+        printf("threads=%2d  speedup   : %.2fx\n", n, speedup);
+    }
+    printf("----------------------------------\n");
     graph_free(g); 
     vcd_close();
     return 0;

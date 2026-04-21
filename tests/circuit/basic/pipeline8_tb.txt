@@ -1,0 +1,6 @@
+# CHIRAG 20-04-26 :: pipeline8 testbench
+# single input toggle ... watch signal ripple through 8 stages
+# OUT7 should eventually equal IN0 after 8 delta cycles
+IN0 1 1
+IN0 0 2
+IN0 1 3

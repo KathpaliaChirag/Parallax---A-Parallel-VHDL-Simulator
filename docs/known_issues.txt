@@ -34,3 +34,46 @@ last updated: 13-04-26
    impact: memory leak ... not a problem for short runs
    fix: add cleanup function to ast_walker
    priority: low
+
+6. FIXED ARRAY CAPS ON TEMP BUFFERS AND AST CHILDREN
+   files: src/parser/parser.y, src/parser/ast.h
+   issue: temp_ports, temp_stmts, temp_processes, temp_sens, temp_arch_signals all fixed at 256
+          MAX_CHILDREN in ast.h also fixed at 256
+   current fix: bumped all to 256 ... works for any reasonable circuit
+   real fix: make these dynamic ... realloc pattern same as proc_contexts in ast_walker.c
+   why not done now: low risk at 256 ... no circuit we have exceeds that
+   priority: low ... only matters if someone writes a 100+ port entity
+
+   7. AUTO TESTBENCH OVERFLOW FOR CIRCUITS WITH 32+ INPUTS
+   file: src/parser/parser.y
+   issue: auto testbench uses "1 << input_count" to compute combinations
+          in C ... 1 is a 32-bit int ... shifting by 32 or more is undefined behavior
+          on most systems it wraps to 0 or 1 ... so thirty2_channel generates 1 combination
+          instead of the intended cap of 16
+   why it happens: 1 << 32 overflows a 32-bit integer ... result is garbage
+   fix: change "1 << input_count" to "1L << input_count" ... L makes it 64-bit long
+        then the cap of 16 kicks in correctly for large circuits
+   current impact: thirty2_channel gets only 1 auto testbench combination ... values all 0
+                   correctness is fine ... just less thorough coverage
+   workaround: use manual testbench file instead ... TB=... in make command
+   priority: low ... manual testbench always works ... auto is just a convenience
+
+7. KNOWN BENCHMARK ISSUE ... always use manual testbench for timing runs
+--
+-- problem 1 ... auto testbench generates wrong input for this circuit
+-- auto mode uses "1 << input_count" to generate 2^N combinations capped at 16
+-- but input_count = 32 here ... 1 << 32 overflows a 32-bit int ... wraps to 1
+-- so auto mode generates exactly 1 combination ... all inputs = 0
+-- signals start at 0 too ... nothing changes ... no process ever fires
+-- process_firings = 0 ... timing is completely meaningless
+-- fix ... always pass TB=tests/circuit/basic/thirty2_channel_tb.txt
+--
+-- problem 2 ... circuit work is too small for meaningful parallel speedup
+-- each OR gate is one line of C ... eval_expr returns in nanoseconds
+-- omp thread creation and synchronization overhead is microseconds
+-- so parallel is actually SLOWER than sequential on this circuit alone
+-- this is expected ... Amdahl's law ... parallel overhead dominates small work
+-- fix ... thirty2_channel_tb.txt has 3 time steps x 16 inputs = 48 events
+-- that gives enough firings to see real numbers
+-- for serious benchmarking we would need 1000s of time steps
+-- noted as future work
